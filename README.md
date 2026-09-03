@@ -11,6 +11,9 @@ hosted on Xano static hosting.
 
 ![Nerve demo reel](media/nerve-demo.gif)
 
+**Full recording:** [`media/nerve-demo.mp4`](media/nerve-demo.mp4) — 1:06, a real screen
+capture of the app driven against the live backend.
+
 *Every number in these frames is real data that came through the real ingest pipeline —
 captured from the running app against a live Xano backend, not mocked. Regenerate with
 `node scripts/capture-frames.mjs && python scripts/build-demo-gif.py`.*

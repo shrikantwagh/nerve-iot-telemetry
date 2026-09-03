@@ -315,6 +315,26 @@ node scripts/capture-frames.mjs && python scripts/build-demo-gif.py
 
 ## Field: Video demo link
 
+`media/nerve-demo.mp4` — 1:06, 1440x900, H.264, 3.9 MB. A real screen recording of the
+running app against the live Xano backend (no narration, no audio).
+
+**Devpost needs a URL, not a file**, so this has to go up to YouTube/Vimeo first:
+
+1. Upload `media/nerve-demo.mp4` to YouTube — Unlisted is fine and does not need review
+2. Paste the watch URL into **Video demo link** on Project details
+3. Paste a Drive/Dropbox/OneDrive link to the same MP4 into the **downloadable backup**
+   field on Additional info (the organisers use it for the in-person Top 5 reel)
+
+Regenerate with `node scripts/record-demo.mjs`.
+
+**What this recording does NOT show**, and why: incident correlation and real Claude
+analysis. Both need `ANTHROPIC_API_KEY` set and a fault correlated into an incident. Until
+then the video shows a working monitoring app rather than the argument the project makes.
+Re-record after the pre-flight in `docs/DEMO_SCRIPT.md` and it will.
+
+### Superseded note
+
+
 Not yet recorded. `docs/DEMO_60S.md` has a second-by-second 60-second cut;
 `docs/DEMO_SCRIPT.md` has the 2–4 minute version the submission rules ask for, with a
 pre-flight checklist.
