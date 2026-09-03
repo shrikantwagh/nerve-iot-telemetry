@@ -572,9 +572,45 @@ export type DeviceListParams = {
   per_page?: number
 }
 
+/**
+ * The device list endpoint's own cap. Asking for more is a 400
+ * (`per_page must be between 1 and 100`), not a clamp — so callers that want the whole
+ * fleet have to page rather than ask for a big number.
+ */
+const DEVICE_PAGE_MAX = 100
+
 export const devices = {
   list: (params: DeviceListParams = {}, signal?: AbortSignal) =>
     request<unknown>('/devices', { query: params, signal }).then((r) => unwrapList<Device>(r, 'devices')),
+
+  /**
+   * Every device, for pickers that need the full fleet in one array.
+   *
+   * Pages at the endpoint's maximum instead of requesting an optimistically large
+   * `per_page`. The rules screen's scope picker used to ask for 250 and got a 400 for it,
+   * which left the picker empty on a fleet of 37 — the request was rejected outright, so
+   * the size of the fleet never mattered.
+   *
+   * `maxPages` is a runaway guard: an endpoint that stops advancing `nextPage` would
+   * otherwise loop forever. Hitting it returns what was collected rather than throwing,
+   * because a truncated picker beats a dead screen.
+   */
+  listAll: async (params: DeviceListParams = {}, signal?: AbortSignal, maxPages = 20) => {
+    const all: Device[] = []
+    for (let page = 1; page <= maxPages; page += 1) {
+      const res = await devices.list({ ...params, per_page: DEVICE_PAGE_MAX, page }, signal)
+      all.push(...res.items)
+      // A short page is the one unambiguous end-of-list signal, so check it first. The
+      // envelope's own counters are only consulted after that, and `pageTotal` is checked
+      // alongside `itemsTotal` because `unwrapList` falls back to `items.length` when a
+      // total is absent — trusting that alone would stop dead on a full first page.
+      if (res.items.length < DEVICE_PAGE_MAX) break
+      const morePages = res.pageTotal != null && page < res.pageTotal
+      const moreItems = res.itemsTotal != null && all.length < res.itemsTotal
+      if (res.nextPage == null && !morePages && !moreItems) break
+    }
+    return all
+  },
 
   get: (id: number, signal?: AbortSignal) =>
     request<unknown>(`/devices/${id}`, { signal }).then(normalizeDeviceDetail),

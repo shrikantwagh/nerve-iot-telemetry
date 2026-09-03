@@ -170,7 +170,9 @@ export default function Alerts() {
   /* ----- Filter option sources. Fetched once, unpolled: sites and devices do not
      change on a triage timescale, and this instance is rate-limited. ----- */
   const sitesQ = useAsync(() => api.sites.list(), [])
-  const devicesQ = useAsync((signal) => api.devices.list({ per_page: 200, sort: 'name' }, signal), [])
+  // Pages internally: /devices rejects a per_page above 100 outright rather than
+  // clamping it, so asking for 200 in one shot returned a 400 and an empty filter.
+  const devicesQ = useAsync((signal) => api.devices.listAll({ sort: 'name' }, signal), [])
 
   /* ----- The queue itself ----- */
   const list = useAsync(
@@ -231,7 +233,7 @@ export default function Alerts() {
   const allPageSelected = ackable.length > 0 && selectedOnPage === ackable.length
 
   const deviceOptions = useMemo(() => {
-    const all = devicesQ.data?.items ?? []
+    const all = devicesQ.data ?? []
     const scoped = siteId ? all.filter((d) => String(d.site_id) === siteId) : all
     return [
       { value: '', label: devicesQ.error ? 'Devices unavailable' : 'Any device' },

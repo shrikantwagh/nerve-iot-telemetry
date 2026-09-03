@@ -317,10 +317,11 @@ export default function Predictions() {
     async () => {
       const [sites, devices, deviceTypes] = await Promise.all([
         api.sites.list(),
-        api.devices.list({ per_page: 250, sort: 'name' }),
+        // Pages internally; /devices 400s on a per_page above 100.
+        api.devices.listAll({ sort: 'name' }),
         api.deviceTypes.list(),
       ])
-      return { sites: sites ?? [], devices: devices.items, deviceTypes: deviceTypes ?? [] }
+      return { sites: sites ?? [], devices, deviceTypes: deviceTypes ?? [] }
     },
     []
   )

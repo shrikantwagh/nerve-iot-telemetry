@@ -431,9 +431,11 @@ export default function Rules() {
       const [types, siteList, deviceList] = await Promise.all([
         api.deviceTypes.list(),
         api.sites.list(),
-        api.devices.list({ per_page: 250, sort: 'name' }, signal),
+        // The scope picker needs the whole fleet, and /devices rejects a per_page above
+        // 100 rather than clamping it — so page, don't ask for a big number.
+        api.devices.listAll({ sort: 'name' }, signal),
       ])
-      return { types, sites: siteList, devices: deviceList.items }
+      return { types, sites: siteList, devices: deviceList }
     },
     []
   )
