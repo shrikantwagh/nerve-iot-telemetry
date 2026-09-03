@@ -107,20 +107,20 @@ try {
   console.log('\n1. overview');
   await warm('#/', 9000);
   await record(page, 'overview', async () => {
-    await sleep(2600);
+    await sleep(1700);
     const h = await pageHeight(page);
-    await glide(page, 0, Math.min(900, h), 4200);
+    await glide(page, 0, Math.min(900, h), 2900);
     await sleep(700);
-    await glide(page, Math.min(900, h), Math.min(1900, h), 3600);
-    await sleep(900);
+    await glide(page, Math.min(900, h), Math.min(1900, h), 2500);
+    await sleep(500);
   });
 
   // 2. FLEET — 10s. The grid, then narrow it with a filter.
   console.log('2. fleet');
   await warm('#/fleet', 8000);
   await record(page, 'fleet', async () => {
-    await sleep(1800);
-    await glide(page, 0, 620, 3200);
+    await sleep(1200);
+    await glide(page, 0, 620, 2200);
     await sleep(600);
     // Pick a device type, so the video shows the grid actually responding.
     await page.evaluate(() => {
@@ -133,25 +133,51 @@ try {
       sel.value = opt.value;
       sel.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    await sleep(3400);
+    await sleep(2300);
   });
 
-  // 3. DEVICE DETAIL — 16s. The charts with their nominal bands are the strongest frame
+  // 3. INCIDENTS — 9s. Correlated clusters, which is the whole argument.
+  console.log('3. incidents');
+  await warm('#/incidents', 8000);
+  await record(page, 'incidents', async () => {
+    await sleep(2200);
+    await glide(page, 0, 560, 3000);
+    await sleep(900);
+    await glide(page, 560, 1100, 2200);
+    await sleep(700);
+  });
+
+  // 4. INCIDENT DETAIL — 15s. Root cause, confidence, evidence, remediation. This is the
+  // single most important segment in the video: it is the difference between "a
+  // dashboard" and "it told me what was wrong".
+  console.log('4. incident detail');
+  await warm('#/incidents/4', 11000);
+  await record(page, 'incident-detail', async () => {
+    await sleep(2600);
+    await glide(page, 0, 520, 3200);
+    await sleep(1800);
+    await glide(page, 520, 1150, 3200);
+    await sleep(1600);
+    await glide(page, 1150, 1750, 2600);
+    await sleep(900);
+  });
+
+  // 5. DEVICE DETAIL — 16s. The charts with their nominal bands are the strongest frame
   // in the product, so this segment gets the most time.
-  console.log('3. device detail');
+  console.log('5. device detail');
   await warm('#/devices/2', 13000);
   await record(page, 'device-detail', async () => {
-    await sleep(2400);
-    await glide(page, 0, 520, 3000);
+    await sleep(1500);
+    await glide(page, 0, 520, 2100);
     await sleep(1400);
-    await glide(page, 520, 1150, 3600);
+    await glide(page, 520, 1150, 2400);
     await sleep(1400);
-    await glide(page, 1150, 1800, 3200);
+    await glide(page, 1150, 1800, 2100);
     await sleep(1000);
   });
 
   // 4. ASK — 16s. Typed live, because typing is most of what makes it believable.
-  console.log('4. ask');
+  console.log('6. ask');
   await warm('#/ask', 5000);
   await record(page, 'ask', async () => {
     await sleep(1200);
@@ -182,13 +208,13 @@ try {
   });
 
   // 5. RULES — 8s. The natural-language composer and the self-documenting rules table.
-  console.log('5. rules');
+  console.log('7. rules');
   await warm('#/rules', 7000);
   await record(page, 'rules', async () => {
-    await sleep(1600);
-    await glide(page, 0, 560, 2800);
+    await sleep(1000);
+    await glide(page, 0, 560, 1900);
     await sleep(800);
-    await glide(page, 560, 1200, 2400);
+    await glide(page, 560, 1200, 1700);
     await sleep(700);
   });
 
@@ -230,15 +256,20 @@ const size = fs.statSync(mp4).size;
 // `ffmpeg -i <file>` with no output is an ERROR exit ("At least one output file must be
 // specified") even though it prints the metadata we want, so execFileSync throws on a
 // perfectly good encode. Read stderr from the thrown error too.
+//
+// Read the duration from the LAST `time=` progress line rather than from the `Duration:`
+// header: the screencast webm segments carry no duration in their headers, so a concat of
+// them reports `Duration: N/A` and the header match comes back empty.
 let dur = 'unknown';
 try {
   const probe = execFileSync(ffmpegPath, ['-hide_banner', '-i', mp4, '-f', 'null', '-'], {
     encoding: 'utf8',
     stdio: ['ignore', 'ignore', 'pipe'],
   });
-  dur = probe.match(/Duration: ([0-9:.]+)/)?.[1] ?? dur;
+  dur = probe.match(/time=([0-9:.]+)/g)?.pop()?.slice(5) ?? dur;
 } catch (e) {
-  dur = String(e.stderr || '').match(/Duration: ([0-9:.]+)/)?.[1] ?? dur;
+  dur = String(e.stderr || '').match(/time=([0-9:.]+)/g)?.pop()?.slice(5) ?? dur;
 }
 
 console.log(`\nwrote ${path.basename(mp4)}  ${(size / 1024 / 1024).toFixed(2)} MB  duration ${dur}`);
+console.log('\nThis runs ~80s. For the 60-second cut: node scripts/trim-demo.mjs');
