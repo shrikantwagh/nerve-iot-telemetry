@@ -779,6 +779,22 @@ function PostmortemCard({
     return res
   })
 
+  /**
+   * A postmortem can also arrive from the server — another operator drafts one, or the
+   * correlation task writes it — and the page polls every 30s. Without this, the card
+   * would keep showing "No postmortem yet" over an incident that has one, because the
+   * initial state was captured on mount. `adopted` tracks what we last took from the
+   * server so this cannot fight with a draft made in this browser.
+   */
+  const stored = incident.ai_postmortem ?? null
+  const [adopted, setAdopted] = useState<string | null>(stored)
+  useEffect(() => {
+    if (!stored || stored === adopted) return
+    setAdopted(stored)
+    setText(stored)
+    setMeta({ model: incident.ai_model ?? undefined, fallbackUsed: incident.ai_fallback_used })
+  }, [stored, adopted, incident.ai_model, incident.ai_fallback_used])
+
   const button = canAct ? (
     <Button
       onClick={() => draft.run()}
@@ -1300,7 +1316,21 @@ function MemberAlertsCard({
           hint="An incident is a cluster of alerts, so an empty list means they were all resolved and swept. Check the timeline below for what fired while it was open."
         />
       ) : (
-        <Table head={['Severity', 'Device', 'Metric', 'Observed', 'Threshold', 'z', 'Fired', '']}>
+        <Table
+          head={[
+            'Severity',
+            'Device',
+            'Metric',
+            'Observed',
+            'Threshold',
+            'z',
+            'Fired',
+            // Named for screen readers; a visible label over two small buttons is noise.
+            <span key="actions" className="sr-only">
+              Actions
+            </span>,
+          ]}
+        >
           {alerts.map((a) => (
             <Row key={a.id}>
               <Cell nowrap>

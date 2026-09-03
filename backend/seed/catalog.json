@@ -1,0 +1,687 @@
+{
+  "_generated_by": "scripts/export-seed.mjs from simulator/catalog.js - do not hand-edit",
+  "sites": [
+    {
+      "code": "OSA-01",
+      "name": "Osaka Distribution Center",
+      "timezone": "Asia/Tokyo",
+      "region": "APAC",
+      "address": "2-1 Nanko-kita, Suminoe-ku, Osaka",
+      "lat": 34.6937,
+      "lng": 135.5023
+    },
+    {
+      "code": "MUC-02",
+      "name": "Munich Assembly Plant",
+      "timezone": "Europe/Berlin",
+      "region": "EMEA",
+      "address": "Lilienthalallee 40, Munich",
+      "lat": 48.1351,
+      "lng": 11.582
+    },
+    {
+      "code": "CHI-03",
+      "name": "Chicago Fulfillment Hub",
+      "timezone": "America/Chicago",
+      "region": "AMER",
+      "address": "1400 S Rockwell St, Chicago, IL",
+      "lat": 41.8781,
+      "lng": -87.6298
+    },
+    {
+      "code": "SGP-04",
+      "name": "Singapore Cold Chain",
+      "timezone": "Asia/Singapore",
+      "region": "APAC",
+      "address": "21 Jurong Port Rd, Singapore",
+      "lat": 1.3521,
+      "lng": 103.8198
+    }
+  ],
+  "device_types": [
+    {
+      "code": "amr-ld250",
+      "name": "AMR — Autonomous Mobile Robot",
+      "category": "robot",
+      "manufacturer": "OMRON",
+      "model": "LD-250",
+      "icon": "robot",
+      "offline_after_seconds": 120,
+      "metric_schema": [
+        {
+          "key": "battery_pct",
+          "label": "Battery",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 25,
+          "nominal_max": 100,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 1
+        },
+        {
+          "key": "battery_temp_c",
+          "label": "Battery temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 10,
+          "nominal_max": 45,
+          "hard_min": -20,
+          "hard_max": 90,
+          "precision": 1
+        },
+        {
+          "key": "motor_temp_c",
+          "label": "Motor temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 20,
+          "nominal_max": 75,
+          "hard_min": -20,
+          "hard_max": 140,
+          "precision": 1
+        },
+        {
+          "key": "motor_current_a",
+          "label": "Motor current",
+          "unit": "A",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 24,
+          "hard_min": 0,
+          "hard_max": 60,
+          "precision": 2
+        },
+        {
+          "key": "wheel_slip_pct",
+          "label": "Wheel slip",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 4,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 2
+        },
+        {
+          "key": "localization_conf",
+          "label": "Localization confidence",
+          "unit": "",
+          "kind": "gauge",
+          "nominal_min": 0.85,
+          "nominal_max": 1,
+          "hard_min": 0,
+          "hard_max": 1,
+          "precision": 3
+        },
+        {
+          "key": "speed_mps",
+          "label": "Speed",
+          "unit": "m/s",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 1.8,
+          "hard_min": 0,
+          "hard_max": 2.5,
+          "precision": 2
+        },
+        {
+          "key": "payload_kg",
+          "label": "Payload",
+          "unit": "kg",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 250,
+          "hard_min": 0,
+          "hard_max": 300,
+          "precision": 1
+        },
+        {
+          "key": "wifi_rssi_dbm",
+          "label": "Wi-Fi RSSI",
+          "unit": "dBm",
+          "kind": "gauge",
+          "nominal_min": -70,
+          "nominal_max": -40,
+          "hard_min": -100,
+          "hard_max": 0,
+          "precision": 0
+        },
+        {
+          "key": "estop_engaged",
+          "label": "E-stop engaged",
+          "unit": "",
+          "kind": "state",
+          "precision": 0
+        },
+        {
+          "key": "odometry_km",
+          "label": "Odometry",
+          "unit": "km",
+          "kind": "counter",
+          "precision": 3
+        },
+        {
+          "key": "dock_cycles",
+          "label": "Dock cycles",
+          "unit": "",
+          "kind": "counter",
+          "precision": 0
+        }
+      ]
+    },
+    {
+      "code": "freezer-cc900",
+      "name": "Cold-Chain Freezer",
+      "category": "refrigeration",
+      "manufacturer": "Carrier",
+      "model": "CC-900",
+      "icon": "snowflake",
+      "offline_after_seconds": 300,
+      "metric_schema": [
+        {
+          "key": "temp_c",
+          "label": "Cabinet temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": -24,
+          "nominal_max": -16,
+          "hard_min": -40,
+          "hard_max": 30,
+          "precision": 2
+        },
+        {
+          "key": "setpoint_c",
+          "label": "Setpoint",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": -24,
+          "nominal_max": -16,
+          "hard_min": -40,
+          "hard_max": 0,
+          "precision": 1
+        },
+        {
+          "key": "evap_temp_c",
+          "label": "Evaporator temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": -34,
+          "nominal_max": -22,
+          "hard_min": -50,
+          "hard_max": 20,
+          "precision": 1
+        },
+        {
+          "key": "humidity_pct",
+          "label": "Humidity",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 20,
+          "nominal_max": 60,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 1
+        },
+        {
+          "key": "power_w",
+          "label": "Power draw",
+          "unit": "W",
+          "kind": "gauge",
+          "nominal_min": 200,
+          "nominal_max": 1400,
+          "hard_min": 0,
+          "hard_max": 3000,
+          "precision": 0
+        },
+        {
+          "key": "door_open_seconds",
+          "label": "Door open (rolling)",
+          "unit": "s",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 60,
+          "hard_min": 0,
+          "hard_max": 3600,
+          "precision": 0
+        },
+        {
+          "key": "compressor_on",
+          "label": "Compressor",
+          "unit": "",
+          "kind": "state",
+          "precision": 0
+        },
+        {
+          "key": "door_open",
+          "label": "Door",
+          "unit": "",
+          "kind": "state",
+          "precision": 0
+        },
+        {
+          "key": "defrost_cycles",
+          "label": "Defrost cycles",
+          "unit": "",
+          "kind": "counter",
+          "precision": 0
+        },
+        {
+          "key": "energy_kwh",
+          "label": "Energy",
+          "unit": "kWh",
+          "kind": "counter",
+          "precision": 2
+        }
+      ]
+    },
+    {
+      "code": "hvac-rtu40",
+      "name": "Rooftop HVAC Unit",
+      "category": "hvac",
+      "manufacturer": "Daikin",
+      "model": "RTU-40",
+      "icon": "wind",
+      "offline_after_seconds": 300,
+      "metric_schema": [
+        {
+          "key": "supply_temp_c",
+          "label": "Supply air",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 11,
+          "nominal_max": 16,
+          "hard_min": -10,
+          "hard_max": 60,
+          "precision": 1
+        },
+        {
+          "key": "return_temp_c",
+          "label": "Return air",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 20,
+          "nominal_max": 26,
+          "hard_min": -10,
+          "hard_max": 60,
+          "precision": 1
+        },
+        {
+          "key": "fan_rpm",
+          "label": "Fan speed",
+          "unit": "rpm",
+          "kind": "gauge",
+          "nominal_min": 600,
+          "nominal_max": 1500,
+          "hard_min": 0,
+          "hard_max": 2000,
+          "precision": 0
+        },
+        {
+          "key": "suction_pressure_kpa",
+          "label": "Suction pressure",
+          "unit": "kPa",
+          "kind": "gauge",
+          "nominal_min": 380,
+          "nominal_max": 520,
+          "hard_min": 0,
+          "hard_max": 1200,
+          "precision": 0
+        },
+        {
+          "key": "filter_dp_pa",
+          "label": "Filter Δp",
+          "unit": "Pa",
+          "kind": "gauge",
+          "nominal_min": 40,
+          "nominal_max": 220,
+          "hard_min": 0,
+          "hard_max": 600,
+          "precision": 0
+        },
+        {
+          "key": "power_w",
+          "label": "Power draw",
+          "unit": "W",
+          "kind": "gauge",
+          "nominal_min": 400,
+          "nominal_max": 7000,
+          "hard_min": 0,
+          "hard_max": 12000,
+          "precision": 0
+        },
+        {
+          "key": "compressor_on",
+          "label": "Compressor",
+          "unit": "",
+          "kind": "state",
+          "precision": 0
+        },
+        {
+          "key": "compressor_starts",
+          "label": "Compressor starts",
+          "unit": "",
+          "kind": "counter",
+          "precision": 0
+        },
+        {
+          "key": "runtime_hours",
+          "label": "Runtime",
+          "unit": "h",
+          "kind": "counter",
+          "precision": 2
+        }
+      ]
+    },
+    {
+      "code": "cnc-vmc850",
+      "name": "CNC Vertical Machining Center",
+      "category": "machine_tool",
+      "manufacturer": "Mazak",
+      "model": "VMC-850",
+      "icon": "cog",
+      "offline_after_seconds": 180,
+      "metric_schema": [
+        {
+          "key": "spindle_rpm",
+          "label": "Spindle speed",
+          "unit": "rpm",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 12000,
+          "hard_min": 0,
+          "hard_max": 15000,
+          "precision": 0
+        },
+        {
+          "key": "spindle_load_pct",
+          "label": "Spindle load",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 85,
+          "hard_min": 0,
+          "hard_max": 150,
+          "precision": 1
+        },
+        {
+          "key": "spindle_temp_c",
+          "label": "Spindle temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 25,
+          "nominal_max": 62,
+          "hard_min": 0,
+          "hard_max": 120,
+          "precision": 1
+        },
+        {
+          "key": "vibration_mm_s",
+          "label": "Vibration (RMS)",
+          "unit": "mm/s",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 2.8,
+          "hard_min": 0,
+          "hard_max": 25,
+          "precision": 3
+        },
+        {
+          "key": "coolant_temp_c",
+          "label": "Coolant temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 16,
+          "nominal_max": 30,
+          "hard_min": 0,
+          "hard_max": 80,
+          "precision": 1
+        },
+        {
+          "key": "coolant_flow_lpm",
+          "label": "Coolant flow",
+          "unit": "L/min",
+          "kind": "gauge",
+          "nominal_min": 8,
+          "nominal_max": 20,
+          "hard_min": 0,
+          "hard_max": 40,
+          "precision": 2
+        },
+        {
+          "key": "axis_error_um",
+          "label": "Axis position error",
+          "unit": "µm",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 12,
+          "hard_min": 0,
+          "hard_max": 200,
+          "precision": 1
+        },
+        {
+          "key": "mode",
+          "label": "Mode",
+          "unit": "",
+          "kind": "state",
+          "precision": 0
+        },
+        {
+          "key": "cycle_count",
+          "label": "Cycles",
+          "unit": "",
+          "kind": "counter",
+          "precision": 0
+        },
+        {
+          "key": "spindle_hours",
+          "label": "Spindle hours",
+          "unit": "h",
+          "kind": "counter",
+          "precision": 2
+        }
+      ]
+    },
+    {
+      "code": "power-pm3000",
+      "name": "3-Phase Power Meter",
+      "category": "power",
+      "manufacturer": "Schneider",
+      "model": "PM-3000",
+      "icon": "bolt",
+      "offline_after_seconds": 180,
+      "metric_schema": [
+        {
+          "key": "voltage_l1_v",
+          "label": "Voltage L1",
+          "unit": "V",
+          "kind": "gauge",
+          "nominal_min": 396,
+          "nominal_max": 424,
+          "hard_min": 0,
+          "hard_max": 600,
+          "precision": 1
+        },
+        {
+          "key": "voltage_l2_v",
+          "label": "Voltage L2",
+          "unit": "V",
+          "kind": "gauge",
+          "nominal_min": 396,
+          "nominal_max": 424,
+          "hard_min": 0,
+          "hard_max": 600,
+          "precision": 1
+        },
+        {
+          "key": "voltage_l3_v",
+          "label": "Voltage L3",
+          "unit": "V",
+          "kind": "gauge",
+          "nominal_min": 396,
+          "nominal_max": 424,
+          "hard_min": 0,
+          "hard_max": 600,
+          "precision": 1
+        },
+        {
+          "key": "current_a",
+          "label": "Current",
+          "unit": "A",
+          "kind": "gauge",
+          "nominal_min": 5,
+          "nominal_max": 180,
+          "hard_min": 0,
+          "hard_max": 400,
+          "precision": 2
+        },
+        {
+          "key": "power_kw",
+          "label": "Active power",
+          "unit": "kW",
+          "kind": "gauge",
+          "nominal_min": 2,
+          "nominal_max": 110,
+          "hard_min": 0,
+          "hard_max": 250,
+          "precision": 2
+        },
+        {
+          "key": "power_factor",
+          "label": "Power factor",
+          "unit": "",
+          "kind": "gauge",
+          "nominal_min": 0.9,
+          "nominal_max": 1,
+          "hard_min": 0,
+          "hard_max": 1,
+          "precision": 3
+        },
+        {
+          "key": "frequency_hz",
+          "label": "Frequency",
+          "unit": "Hz",
+          "kind": "gauge",
+          "nominal_min": 49.8,
+          "nominal_max": 50.2,
+          "hard_min": 45,
+          "hard_max": 65,
+          "precision": 2
+        },
+        {
+          "key": "thd_pct",
+          "label": "Voltage THD",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 5,
+          "hard_min": 0,
+          "hard_max": 40,
+          "precision": 2
+        },
+        {
+          "key": "energy_kwh",
+          "label": "Energy",
+          "unit": "kWh",
+          "kind": "counter",
+          "precision": 2
+        }
+      ]
+    },
+    {
+      "code": "gw-edge200",
+      "name": "Edge Gateway",
+      "category": "gateway",
+      "manufacturer": "Advantech",
+      "model": "EDGE-200",
+      "icon": "router",
+      "offline_after_seconds": 90,
+      "metric_schema": [
+        {
+          "key": "cpu_pct",
+          "label": "CPU",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 2,
+          "nominal_max": 70,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 1
+        },
+        {
+          "key": "mem_pct",
+          "label": "Memory",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 10,
+          "nominal_max": 80,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 1
+        },
+        {
+          "key": "disk_pct",
+          "label": "Disk",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 10,
+          "nominal_max": 85,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 1
+        },
+        {
+          "key": "temp_c",
+          "label": "Board temp",
+          "unit": "°C",
+          "kind": "gauge",
+          "nominal_min": 25,
+          "nominal_max": 70,
+          "hard_min": -20,
+          "hard_max": 105,
+          "precision": 1
+        },
+        {
+          "key": "uplink_mbps",
+          "label": "Uplink",
+          "unit": "Mbps",
+          "kind": "gauge",
+          "nominal_min": 1,
+          "nominal_max": 90,
+          "hard_min": 0,
+          "hard_max": 1000,
+          "precision": 2
+        },
+        {
+          "key": "packet_loss_pct",
+          "label": "Packet loss",
+          "unit": "%",
+          "kind": "gauge",
+          "nominal_min": 0,
+          "nominal_max": 1,
+          "hard_min": 0,
+          "hard_max": 100,
+          "precision": 3
+        },
+        {
+          "key": "downstream_devices",
+          "label": "Downstream devices",
+          "unit": "",
+          "kind": "gauge",
+          "nominal_min": 1,
+          "nominal_max": 64,
+          "hard_min": 0,
+          "hard_max": 256,
+          "precision": 0
+        },
+        {
+          "key": "uptime_hours",
+          "label": "Uptime",
+          "unit": "h",
+          "kind": "counter",
+          "precision": 2
+        }
+      ]
+    }
+  ]
+}

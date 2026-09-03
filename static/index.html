@@ -2,9 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Nerve — IoT fleet telemetry</title>
+    <meta
+      name="description"
+      content="AI-native IoT telemetry monitoring. Turns a firehose of device signals into a short list of incidents worth your attention."
+    />
+    <!-- Let the browser paint the right ground colour before React mounts, so a dark-mode
+         load does not flash white. -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2 14h4l2.5-7 3 12 2.5-9 2 4h6' fill='none' stroke='%232a78d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      /* Pre-mount ground, matching --surface-0 in both modes. Without this the page
+         flashes white on a dark-mode load before theme.css applies. */
+      html {
+        background: #f6f5f2;
+      }
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme='light']) {
+          background: #121211;
+        }
+      }
+      html[data-theme='dark'] {
+        background: #121211;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

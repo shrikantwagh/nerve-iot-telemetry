@@ -1,0 +1,25 @@
+{
+  "name": "nerve",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nerve - AI-native IoT telemetry monitoring on Xano. The nervous system for your device fleet.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "validate": "node scripts/xs-validate.mjs --all",
+    "docs": "node scripts/xs-validate.mjs --docs",
+    "seed:export": "node scripts/export-seed.mjs",
+    "backend:diff": "xano workspace push -d ./backend --dry-run",
+    "backend:push": "xano workspace push -d ./backend",
+    "backend:pull": "xano workspace pull -d ./backend",
+    "web:dev": "npm --prefix static run dev",
+    "web:build": "npm --prefix static run build",
+    "web:check": "npm --prefix static exec -- tsc --noEmit -p tsconfig.app.json",
+    "sim": "node simulator/index.js",
+    "sim:backfill": "node simulator/index.js --backfill 24",
+    "sim:scenarios": "node simulator/index.js --list-scenarios",
+    "deploy:web": "node scripts/deploy-web.mjs"
+  }
+}
