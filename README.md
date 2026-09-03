@@ -7,6 +7,8 @@ Built for the Xano **"Rebuild a SaaS Tool You Hate"** hackathon.
 Backend: Xano (XanoScript, pushed from local files via the Xano CLI). Frontend: Vite + React,
 hosted on Xano static hosting.
 
+**Repository:** https://github.com/shrikantwagh/nerve-iot-telemetry
+
 ---
 
 ## The software we replaced, and why

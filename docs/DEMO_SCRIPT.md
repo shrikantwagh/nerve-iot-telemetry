@@ -187,7 +187,7 @@ and about five minutes of lead time before the cascade lands.
 - [ ] **One-line pitch:** The nervous system for your device fleet — AI-native IoT
       telemetry monitoring that turns a firehose of signals into a short list of incidents
       worth your attention.
-- [ ] **Public repo** with this README
+- [x] **Public repo** with this README - https://github.com/shrikantwagh/nerve-iot-telemetry
 - [ ] **2–4 minute demo** covering: incident correlation → NL query → NL rule → prediction
 - [ ] **Build story** — see README § Build story
 - [ ] Live URL from `xano static_host get nerve`
