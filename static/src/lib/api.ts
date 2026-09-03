@@ -242,11 +242,78 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
  * Xano returns a bare array for an unpaged list and an envelope when paging is on.
  * Normalizing here keeps every caller from having to branch.
  */
-function asPaged<T>(value: Paged<T> | T[] | null | undefined): Paged<T> {
-  if (Array.isArray(value)) return { items: value, itemsTotal: value.length, curPage: 1, pageTotal: 1 }
-  if (!value) return { items: [], itemsTotal: 0, curPage: 1, pageTotal: 1 }
-  return { ...value, items: value.items ?? [] }
+/**
+ * Unwrap a list response into a `Paged<T>`, whatever envelope it arrived in.
+ *
+ * Every list endpoint returns an envelope rather than a bare array, and each one names
+ * its fields differently — verified against the live instance:
+ *
+ *   /sites                   { sites,        total_sites }
+ *   /device-types            { device_types, total_types }
+ *   /devices                 { items,        items_total, page, page_total }
+ *   /alerts                  { items,        itemsTotal,  curPage, pageTotal }
+ *   /alert-rules             { items,        itemsTotal }
+ *   /incidents               { items,        items_total, page, page_total }
+ *   /predictions             { items,        count }
+ *   /ai/insights             { items,        total, page, page_total }
+ *   /devices/{id}/commands   { items,        total, page, pages }
+ *   /devices/{id}/timeline   { events,       total_merged }
+ *
+ * Rather than hardcode ten shapes, this looks for the array under a named key, then any
+ * known key, then any array-valued property — and reads the total and page numbers from
+ * whichever spelling is present. Spreading an object that was assumed to be an array is
+ * what blanked five of the app's seven screens, so this is deliberately tolerant: a new
+ * endpoint with yet another field name degrades to "found the array anyway" instead of
+ * throwing during render.
+ */
+const LIST_KEYS = ['items', 'events', 'sites', 'device_types', 'rules', 'devices', 'alerts', 'incidents', 'predictions', 'results', 'data'] as const
+
+function pickNumber(o: Record<string, unknown>, keys: string[]): number | undefined {
+  for (const k of keys) {
+    const v = o[k]
+    if (typeof v === 'number' && Number.isFinite(v)) return v
+  }
+  return undefined
 }
+
+function unwrapList<T>(value: unknown, preferredKey?: string): Paged<T> {
+  if (Array.isArray(value)) {
+    return { items: value as T[], itemsTotal: value.length, curPage: 1, pageTotal: 1 }
+  }
+  if (!value || typeof value !== 'object') {
+    return { items: [], itemsTotal: 0, curPage: 1, pageTotal: 1 }
+  }
+
+  const o = value as Record<string, unknown>
+  const keys = preferredKey ? [preferredKey, ...LIST_KEYS] : [...LIST_KEYS]
+  let items: T[] | null = null
+  for (const k of keys) {
+    if (Array.isArray(o[k])) {
+      items = o[k] as T[]
+      break
+    }
+  }
+  // Last resort: the first array-valued property, whatever it is called.
+  if (!items) {
+    const found = Object.values(o).find((v) => Array.isArray(v))
+    items = (found as T[]) ?? []
+  }
+
+  return {
+    items,
+    itemsTotal:
+      pickNumber(o, ['itemsTotal', 'items_total', 'total', 'count', 'total_merged', 'total_sites', 'total_types']) ??
+      items.length,
+    itemsReceived: pickNumber(o, ['itemsReceived', 'returned_count']) ?? items.length,
+    curPage: pickNumber(o, ['curPage', 'page']) ?? 1,
+    pageTotal: pickNumber(o, ['pageTotal', 'page_total', 'pages']) ?? 1,
+    nextPage: pickNumber(o, ['nextPage', 'next_page']) ?? null,
+    prevPage: pickNumber(o, ['prevPage', 'prev_page']) ?? null,
+  }
+}
+
+/** For endpoints whose callers want a plain array. */
+const unwrapArray = <T,>(value: unknown, preferredKey?: string): T[] => unwrapList<T>(value, preferredKey).items
 
 /* -------------------------------------------------------------------------- */
 /* Auth                                                                       */
@@ -426,7 +493,7 @@ export type DeviceListParams = {
 
 export const devices = {
   list: (params: DeviceListParams = {}, signal?: AbortSignal) =>
-    request<Paged<Device> | Device[]>('/devices', { query: params, signal }).then(asPaged),
+    request<unknown>('/devices', { query: params, signal }).then((r) => unwrapList<Device>(r, 'devices')),
 
   get: (id: number, signal?: AbortSignal) => request<Device>(`/devices/${id}`, { signal }),
 
@@ -444,22 +511,24 @@ export const devices = {
     signal?: AbortSignal
   ) => request<MetricSeries>(`/devices/${id}/telemetry`, { query: params, signal }),
 
-  timeline: (id: number) => request<TimelineEntry[]>(`/devices/${id}/timeline`),
+  timeline: (id: number) =>
+    request<unknown>(`/devices/${id}/timeline`).then((r) => unwrapArray<TimelineEntry>(r, 'events')),
 
-  commands: (id: number) => request<DeviceCommand[]>(`/devices/${id}/commands`),
+  commands: (id: number) =>
+    request<unknown>(`/devices/${id}/commands`).then((r) => unwrapArray<DeviceCommand>(r)),
 
   issueCommand: (id: number, command: string, payload?: Record<string, unknown>, note?: string) =>
     request<DeviceCommand>(`/devices/${id}/commands`, { method: 'POST', body: { command, payload, note } }),
 }
 
 export const sites = {
-  list: () => request<SiteWire[]>('/sites').then((rows) => (rows ?? []).map(normalizeSite)),
+  list: () => request<unknown>('/sites').then((r) => unwrapArray<SiteWire>(r, 'sites').map(normalizeSite)),
   create: (payload: Partial<Site> & { code: string; name: string }) =>
     request<Site>('/sites', { method: 'POST', body: payload }),
 }
 
 export const deviceTypes = {
-  list: () => request<DeviceType[]>('/device-types'),
+  list: () => request<unknown>('/device-types').then((r) => unwrapArray<DeviceType>(r, 'device_types')),
   create: (payload: Partial<DeviceType> & { code: string; name: string }) =>
     request<DeviceType>('/device-types', { method: 'POST', body: payload }),
 }
@@ -482,7 +551,7 @@ export type AlertListParams = {
 
 export const alerts = {
   list: (params: AlertListParams = {}, signal?: AbortSignal) =>
-    request<Paged<Alert> | Alert[]>('/alerts', { query: params, signal }).then(asPaged),
+    request<unknown>('/alerts', { query: params, signal }).then((r) => unwrapList<Alert>(r, 'alerts')),
   ack: (id: number) => request<Alert>(`/alerts/${id}/ack`, { method: 'POST' }),
   resolve: (id: number) => request<Alert>(`/alerts/${id}/resolve`, { method: 'POST' }),
   bulkAck: (ids: number[]) =>
@@ -490,7 +559,7 @@ export const alerts = {
 }
 
 export const rules = {
-  list: () => request<AlertRule[]>('/alert-rules'),
+  list: () => request<unknown>('/alert-rules').then((r) => unwrapArray<AlertRule>(r, 'rules')),
   create: (payload: Partial<AlertRule>) =>
     request<AlertRule>('/alert-rules', { method: 'POST', body: payload }),
   update: (id: number, payload: Partial<AlertRule>) =>
@@ -512,7 +581,7 @@ export const rules = {
 
 export const incidents = {
   list: (params: { state?: string; severity?: string; site_id?: number; page?: number } = {}, signal?: AbortSignal) =>
-    request<Paged<Incident> | Incident[]>('/incidents', { query: params, signal }).then(asPaged),
+    request<unknown>('/incidents', { query: params, signal }).then((r) => unwrapList<Incident>(r, 'incidents')),
 
   get: (id: number, signal?: AbortSignal) => request<Incident>(`/incidents/${id}`, { signal }),
 
@@ -568,9 +637,9 @@ export const ai = {
     }),
 
   insights: (params: { kind?: string; device_id?: number; incident_id?: number; page?: number } = {}) =>
-    request<Paged<AiInsight> | AiInsight[]>('/ai/insights', { query: params }).then(asPaged),
+    request<unknown>('/ai/insights', { query: params }).then((r) => unwrapList<AiInsight>(r)),
 
-  queryHistory: () => request<NlQueryLogEntry[]>('/ai/query-history'),
+  queryHistory: () => request<unknown>('/ai/query-history').then((r) => unwrapArray<NlQueryLogEntry>(r)),
 }
 
 /* -------------------------------------------------------------------------- */
@@ -579,7 +648,7 @@ export const ai = {
 
 export const predictions = {
   list: (params: { state?: string; device_id?: number; site_id?: number } = {}) =>
-    request<MaintenancePrediction[]>('/predictions', { query: params }),
+    request<unknown>('/predictions', { query: params }).then((r) => unwrapArray<MaintenancePrediction>(r, 'predictions')),
   schedule: (id: number, scheduled_for: string) =>
     request<MaintenancePrediction>(`/predictions/${id}/schedule`, { method: 'POST', body: { scheduled_for } }),
   dismiss: (id: number, reason: string) =>
@@ -591,7 +660,7 @@ export const predictions = {
 /* -------------------------------------------------------------------------- */
 
 export const admin = {
-  apiKeys: () => request<ApiKey[]>('/api-keys'),
+  apiKeys: () => request<unknown>('/api-keys').then((r) => unwrapArray<ApiKey>(r)),
 
   /** The plaintext key is returned exactly once, here. It is never retrievable again. */
   createApiKey: (name: string, site_id?: number) =>
@@ -603,7 +672,7 @@ export const admin = {
   revokeApiKey: (id: number) => request<{ ok: boolean }>(`/api-keys/${id}`, { method: 'DELETE' }),
 
   auditLog: (params: { action?: string; user_id?: number; page?: number } = {}) =>
-    request<Paged<AuditEntry> | AuditEntry[]>('/audit-log', { query: params }).then(asPaged),
+    request<unknown>('/audit-log', { query: params }).then((r) => unwrapList<AuditEntry>(r)),
 
   seed: () =>
     request<{ sites: number; device_types: number; alert_rules: number; message?: string }>('/admin/seed', {

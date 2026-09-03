@@ -8,7 +8,8 @@
  */
 
 import { Suspense, lazy } from 'react'
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout } from './components/Layout'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
@@ -44,6 +45,7 @@ function FullPageSpinner() {
  */
 function AuthedApp() {
   const overview = useAsync((signal) => api.fleet.overview(signal), [], { pollMs: 60_000 })
+  const location = useLocation()
 
   const counts = {
     incidents:
@@ -60,15 +62,19 @@ function AuthedApp() {
 
   return (
     <Layout counts={counts}>
-      <Suspense
-        fallback={
-          <div className="flex justify-center py-16" style={{ color: 'var(--text-muted)' }}>
-            <Spinner size={20} />
-          </div>
-        }
-      >
-        <Routes>
-          <Route path="/" element={<Overview overview={overview} />} />
+      {/* Per-route, not just at the root: a screen that throws should degrade to a
+          message inside the shell, with the nav still usable, rather than blanking the
+          whole application. resetKey clears the fallback on navigation. */}
+      <ErrorBoundary resetKey={location.pathname} label={location.pathname}>
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-16" style={{ color: 'var(--text-muted)' }}>
+              <Spinner size={20} />
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<Overview overview={overview} />} />
           <Route path="/fleet" element={<Fleet />} />
           <Route path="/devices/:deviceId" element={<DeviceDetail />} />
           <Route path="/incidents" element={<Incidents />} />
@@ -78,9 +84,10 @@ function AuthedApp() {
           <Route path="/ask" element={<Ask />} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </Layout>
   )
 }
@@ -97,10 +104,12 @@ function Gate() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <HashRouter>
-        <Gate />
-      </HashRouter>
-    </AuthProvider>
+    <ErrorBoundary label="the application shell">
+      <AuthProvider>
+        <HashRouter>
+          <Gate />
+        </HashRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
