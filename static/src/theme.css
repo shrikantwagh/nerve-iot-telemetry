@@ -34,6 +34,13 @@
   --text-muted: #82817a;
   --text-inverse: #fcfcfb;
 
+  /* Ink that sits on a saturated fill (--accent, --status-critical, an avatar color).
+     Deliberately NOT --text-inverse: that token flips with the theme, which would put
+     near-black text on a blue button in dark mode. This one is white in every theme,
+     because the fills it sits on are saturated in every theme. Declared only here —
+     it inherits into both dark blocks unchanged. */
+  --on-accent: #ffffff;
+
   /* Categorical series — fixed order, never cycled */
   --series-1: #2a78d6; /* blue */
   --series-2: #eb6834; /* orange */
@@ -66,6 +73,10 @@
   --accent: #2a78d6;
   --accent-soft: rgba(42, 120, 214, 0.1);
   --focus-ring: rgba(42, 120, 214, 0.45);
+
+  /* Modal backdrop. Black in both themes on purpose: it darkens whatever is behind
+     it, so it must not invert with the palette. */
+  --scrim: rgba(0, 0, 0, 0.45);
 
   --radius: 10px;
   --radius-sm: 6px;

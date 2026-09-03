@@ -108,7 +108,7 @@ export function Layout({
                 {count !== undefined && count > 0 && (
                   <span
                     className="num-tabular rounded-full px-1.5 text-[10px] font-semibold"
-                    style={{ background: 'var(--status-critical)', color: '#fff' }}
+                    style={{ background: 'var(--status-critical)', color: 'var(--on-accent)' }}
                   >
                     {count > 99 ? '99+' : count}
                   </span>
@@ -122,7 +122,7 @@ export function Layout({
           <div className="mb-2 flex items-center gap-2">
             <span
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
-              style={{ background: user?.avatar_color || 'var(--accent)', color: '#fff' }}
+              style={{ background: user?.avatar_color || 'var(--accent)', color: 'var(--on-accent)' }}
             >
               {initials(user?.name)}
             </span>
@@ -149,7 +149,7 @@ export function Layout({
       {navOpen && (
         <button
           className="fixed inset-0 z-30 lg:hidden"
-          style={{ background: 'rgba(0,0,0,0.4)' }}
+          style={{ background: 'var(--scrim)' }}
           onClick={() => setNavOpen(false)}
           aria-label="Close navigation"
         />

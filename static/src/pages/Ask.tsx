@@ -657,7 +657,7 @@ export default function Ask() {
                   className={`inline-flex items-center justify-center gap-2 rounded-[8px] border px-6 py-3 text-[15px] font-semibold ${
                     pending || !question.trim() ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-85'
                   }`}
-                  style={{ background: 'var(--accent)', color: '#fff', borderColor: 'transparent' }}
+                  style={{ background: 'var(--accent)', color: 'var(--on-accent)', borderColor: 'transparent' }}
                 >
                   {pending && <Spinner size={14} />}
                   Ask

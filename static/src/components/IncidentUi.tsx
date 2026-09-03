@@ -200,7 +200,7 @@ export function AssigneeChip({ name, id }: { name?: string | null; id?: number |
         className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-semibold"
         style={{
           background: assigned ? 'var(--accent)' : 'var(--surface-2)',
-          color: assigned ? '#fff' : 'var(--text-muted)',
+          color: assigned ? 'var(--on-accent)' : 'var(--text-muted)',
         }}
       >
         {assigned ? initials(name ?? `#${id}`) : '—'}

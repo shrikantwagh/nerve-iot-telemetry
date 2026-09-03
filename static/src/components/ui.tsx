@@ -74,14 +74,14 @@ export function SectionHeader({
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const BUTTON_STYLE: Record<ButtonVariant, CSSProperties> = {
-  primary: { background: 'var(--accent)', color: '#fff', borderColor: 'transparent' },
+  primary: { background: 'var(--accent)', color: 'var(--on-accent)', borderColor: 'transparent' },
   secondary: {
     background: 'var(--surface-2)',
     color: 'var(--text-primary)',
     borderColor: 'var(--surface-3)',
   },
   ghost: { background: 'transparent', color: 'var(--text-secondary)', borderColor: 'transparent' },
-  danger: { background: 'var(--status-critical)', color: '#fff', borderColor: 'transparent' },
+  danger: { background: 'var(--status-critical)', color: 'var(--on-accent)', borderColor: 'transparent' },
 }
 
 export function Button({
@@ -493,7 +493,7 @@ export function Modal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-[8vh]"
-      style={{ background: 'rgba(0,0,0,0.45)' }}
+      style={{ background: 'var(--scrim)' }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
