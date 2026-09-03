@@ -30,12 +30,12 @@ Not "Xano as a CRUD wrapper" — the backend carries the product.
 
 | Xano capability | How Nerve depends on it |
 |---|---|
-| **Data model** (15 tables, table refs, composite indexes, json fields, enums) | Devices, device types with a declarative `metric_schema`, wide-format time-series, rollups, rules, alerts, incidents |
+| **Data model** (16 tables, table refs, composite indexes, json fields, enums) | Devices, device types with a declarative `metric_schema`, wide-format time-series, rollups, rules, alerts, incidents |
 | **Auth (JWT)** | Signup / login / me, role-gated endpoints (`admin` / `operator` / `viewer`), one-click demo login for judges |
 | **Middleware** | `mw_api_key_auth` on the ingest group — devices authenticate with hashed API keys, *not* user JWTs. Post-middleware writes the audit log. |
-| **Custom functions** | `fn_claude` (the Anthropic wrapper every AI endpoint reuses), `fn_evaluate_rules`, `fn_compute_health`, `fn_resolve_device`, `fn_baseline` |
+| **Custom functions** | `fn_claude` (the Anthropic wrapper every AI endpoint reuses), `fn_evaluate_rules`, `fn_compute_health`, `fn_resolve_device`, `fn_update_baseline`, `fn_correlate`, `fn_audit` |
 | **Background tasks (cron)** | Six tasks: offline sweep, metric rollups, **AI incident correlation**, predictive-maintenance sweep, daily AI fleet digest, retention pruning |
-| **Database triggers** | On `alert` insert -> recompute device health and attempt incident correlation |
+| **Background tasks** | Correlation runs on a 2-minute task rather than an `alert`-insert trigger: Xano does not document whether triggers fire per row on `db.bulk.add`, and the ingest path inserts in bulk, so a trigger could either miss batches or fire 500 times. A task is the honest choice. |
 | **External API calls** | Anthropic Messages API called from the function stack, keyed by a workspace env var (`ANTHROPIC_API_KEY`) — the AI lives in the backend, not the browser |
 | **Realtime channels** | `fleet:{site}` and `device:{id}` — live tiles and live charts without polling |
 | **Static hosting** | The React SPA ships to Xano static hosting; one platform, one deploy |
@@ -48,7 +48,7 @@ be replayed for the demo.
 
 ## 3. Data model
 
-15 tables. An arrow marks a table reference.
+16 tables. An arrow marks a table reference.
 
 ### Identity and tenancy
 

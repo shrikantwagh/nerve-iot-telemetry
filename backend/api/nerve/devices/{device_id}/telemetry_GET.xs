@@ -220,7 +220,7 @@ query "devices/{device_id}/telemetry" verb=GET {
                 }
 
                 var $keep {
-                  value = ($row_index|mod:$stride) == 0
+                  value = ($row_index|modulus:$stride) == 0
                 }
 
                 // A metric absent from a reading is skipped rather than plotted as zero - a gap in a chart is honest, a zero is a lie.
@@ -320,7 +320,7 @@ query "devices/{device_id}/telemetry" verb=GET {
             foreach ($buckets) {
               each as $bucket {
                 var $keep {
-                  value = ($bucket_index|mod:$key_stride) == 0
+                  value = ($bucket_index|modulus:$key_stride) == 0
                 }
 
                 // value is the bucket average; min and max are carried through so the chart can shade the range the average hides. An empty bucket (sample_count 0) is skipped for the same reason a missing raw reading is.
