@@ -1,0 +1,52 @@
+[
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\01-login.png",
+    "name": "login",
+    "label": "sign-in, dark"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\02-overview.png",
+    "name": "overview",
+    "label": "fleet overview - live totals"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\03-fleet.png",
+    "name": "fleet",
+    "label": "device grid, filters, live status"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\04-incidents.png",
+    "name": "incidents",
+    "label": "incidents - alerts correlated into clusters"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\05-incident-detail.png",
+    "name": "incident-detail",
+    "label": "incident detail - root cause, evidence, runbook"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\06-device-detail.png",
+    "name": "device-detail",
+    "label": "device detail - real telemetry charts"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\07-rules.png",
+    "name": "rules",
+    "label": "rules + natural-language composer"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\08-admin.png",
+    "name": "admin",
+    "label": "admin - keys, types, AI activity"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\09-ask-typed.png",
+    "name": "ask-typed",
+    "label": "Ask console - question typed"
+  },
+  {
+    "file": "C:\\Users\\shrikant.wagh.2\\AppData\\Local\\Temp\\claude\\C--Users-shrikant-wagh-2-projects-mobilesoftware\\49c8198c-8f45-4a72-bb1e-c0a7d5df7933\\scratchpad\\capture\\frames\\10-ask-answered.png",
+    "name": "ask-answered",
+    "label": "Ask console - answer, plan and provenance"
+  }
+]

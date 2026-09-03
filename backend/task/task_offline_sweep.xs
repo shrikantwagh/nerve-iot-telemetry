@@ -145,7 +145,7 @@ task task_offline_sweep {
                 db.add alert {
                   data = {
                     created_at    : "now"
-                    alert_rule_id : $rule|get:"id"
+                    alert_rule_id : $rule.id
                     device_id     : $device.id
                     metric_key    : "offline"
                     observed_value: $age_seconds|round:0

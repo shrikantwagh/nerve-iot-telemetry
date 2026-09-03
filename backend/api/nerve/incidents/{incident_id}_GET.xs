@@ -83,12 +83,14 @@ query "incidents/{incident_id}" verb=GET {
         db.get device {
           field_name = "id"
           field_value = $alert.device_id
+          output = ["id", "name", "serial", "status", "health_score", "site_id", "location_label", "firmware_version", "last_seen_at", "uplink_device_id", "device_type_id", "metrics_latest"]
         } as $device
 
         // Type carries the category and the metric schema, both of which the UI uses to render units and nominal bands.
         db.get device_type {
           field_name = "id"
           field_value = $device.device_type_id
+          output = ["id", "name", "code", "category"]
         } as $device_type
 
         // Observed versus threshold side by side, because "12.4" alone is not an observation.
@@ -97,11 +99,11 @@ query "incidents/{incident_id}" verb=GET {
             id              : $alert.id
             alert_rule_id   : $alert.alert_rule_id
             device_id       : $alert.device_id
-            device_name     : $device|get:"name"
-            device_serial   : $device|get:"serial"
-            device_type_id  : $device|get:"device_type_id"
-            device_type_name: $device_type|get:"name"
-            device_type_code: $device_type|get:"code"
+            device_name     : $device.name
+            device_serial   : $device.serial
+            device_type_id  : $device.device_type_id
+            device_type_name: $device_type.name
+            device_type_code: $device_type.code
             metric_key      : $alert.metric_key
             observed_value  : $alert.observed_value
             threshold       : $alert.threshold
@@ -127,19 +129,19 @@ query "incidents/{incident_id}" verb=GET {
             array.push $devices {
               value = {
                 id             : $alert.device_id
-                name           : $device|get:"name"
-                serial         : $device|get:"serial"
-                status         : $device|get:"status"
-                health_score   : $device|get:"health_score"
-                site_id        : $device|get:"site_id"
-                location_label : $device|get:"location_label"
-                firmware_version: $device|get:"firmware_version"
-                last_seen_at   : $device|get:"last_seen_at"
-                uplink_device_id: $device|get:"uplink_device_id"
-                device_type_id : $device|get:"device_type_id"
-                type_name      : $device_type|get:"name"
-                type_category  : $device_type|get:"category"
-                metrics_latest : $device|get:"metrics_latest"
+                name           : $device.name
+                serial         : $device.serial
+                status         : $device.status
+                health_score   : $device.health_score
+                site_id        : $device.site_id
+                location_label : $device.location_label
+                firmware_version: $device.firmware_version
+                last_seen_at   : $device.last_seen_at
+                uplink_device_id: $device.uplink_device_id
+                device_type_id : $device.device_type_id
+                type_name      : $device_type.name
+                type_category  : $device_type.category
+                metrics_latest : $device.metrics_latest
               }
             }
           }
@@ -199,7 +201,7 @@ query "incidents/{incident_id}" verb=GET {
           value = {
             id         : $command.id
             device_id  : $command.device_id
-            device_name: $command_device|get:"name"
+            device_name: $command_device.name
             command    : $command.command
             payload    : $command.payload
             state      : $command.state

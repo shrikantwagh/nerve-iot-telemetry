@@ -26,6 +26,10 @@ HOLD_MS = {
     "login": 1400,
     "overview": 3200,
     "fleet": 3000,
+    "incidents": 3000,
+    # The longest hold in the reel. This frame carries the hypothesis, the evidence and
+    # the runbook, so it is the one frame a reader needs time to actually read.
+    "incident-detail": 4600,
     "device-detail": 3600,
     "rules": 3000,
     "admin": 2600,

@@ -343,6 +343,13 @@ query "incidents/{incident_id}/analyze" verb=POST {
       value = false
     }
 
+    // Why the model call failed, when it failed. Null on the success path. Without this a
+    // missing API key and a rate limit are indistinguishable from the outside: both return
+    // 200 with a deterministic answer.
+    var $ai_error {
+      value = null
+    }
+
     // Stamped either way, so the incident row and its ai_insight row always agree on which model was attempted.
     var $model {
       value = null
@@ -419,6 +426,10 @@ query "incidents/{incident_id}/analyze" verb=POST {
 
         var.update $parse_failed {
           value = $ai.parse_failed
+        }
+
+        var.update $ai_error {
+          value = $ai.error
         }
 
         // The model's answer replaces the deterministic one only when it actually parsed. Anything else keeps the defensible text above.
@@ -507,6 +518,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
     }
     fallback_used: $fallback_used
     parse_failed : $parse_failed
+    ai_error     : $ai_error
     model        : $model
     latency_ms   : $latency_ms
     insight_id   : $insight_id

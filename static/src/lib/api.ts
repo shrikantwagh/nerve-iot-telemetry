@@ -688,7 +688,18 @@ function normalizeIncidentDetail(wire: unknown): Incident {
     site_name: site?.name ?? (inner as Incident).site_name,
     assignee_name: assignee?.name ?? (inner as Incident).assignee_name,
     alerts: unwrapArray<Alert>(w.alerts ?? [], 'alerts'),
-    devices: unwrapArray<Device>(w.devices ?? [], 'devices'),
+    // The endpoint names the joined type `type_name` and carries the site once on the
+    // incident rather than on every device — an incident's devices are correlated BY
+    // site, so repeating it per row would be redundant on the wire. The device table
+    // renders per row, so fold both onto each device here.
+    devices: unwrapArray<Device>(w.devices ?? [], 'devices').map((d) => {
+      const row = d as Device & { type_name?: string; type_category?: string }
+      return {
+        ...row,
+        device_type_name: row.device_type_name ?? row.type_name,
+        site_name: row.site_name ?? site?.name,
+      }
+    }),
     commands: unwrapArray<DeviceCommand>(w.commands ?? [], 'commands'),
     ai_summary: (ai.summary ?? (inner as Incident).ai_summary ?? null) as string | null,
     ai_root_cause: (ai.root_cause ?? (inner as Incident).ai_root_cause ?? null) as string | null,

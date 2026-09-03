@@ -274,11 +274,11 @@ query "devices/{device_id}/telemetry" verb=GET {
               value = {
                 metric_key : $key
                 label      : $schema_entry|get:"label"|first_notnull:$key
-                unit       : $schema_entry|get:"unit"
-                kind       : $schema_entry|get:"kind"
-                nominal_min: $schema_entry|get:"nominal_min"
-                nominal_max: $schema_entry|get:"nominal_max"
-                precision  : $schema_entry|get:"precision"
+                unit       : $schema_entry.unit
+                kind       : $schema_entry.kind
+                nominal_min: $schema_entry.nominal_min
+                nominal_max: $schema_entry.nominal_max
+                precision  : $schema_entry.precision
                 point_count: $points|count
                 points     : $points
               }
@@ -374,11 +374,11 @@ query "devices/{device_id}/telemetry" verb=GET {
               value = {
                 metric_key : $key
                 label      : $schema_entry|get:"label"|first_notnull:$key
-                unit       : $schema_entry|get:"unit"
-                kind       : $schema_entry|get:"kind"
-                nominal_min: $schema_entry|get:"nominal_min"
-                nominal_max: $schema_entry|get:"nominal_max"
-                precision  : $schema_entry|get:"precision"
+                unit       : $schema_entry.unit
+                kind       : $schema_entry.kind
+                nominal_min: $schema_entry.nominal_min
+                nominal_max: $schema_entry.nominal_max
+                precision  : $schema_entry.precision
                 point_count: $points|count
                 points     : $points
               }

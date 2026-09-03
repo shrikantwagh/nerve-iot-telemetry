@@ -550,7 +550,7 @@ query "ai/query" verb=POST {
               value = {
                 field: $f_field
                 op   : $f_op
-                value: $filter|get:"value"
+                value: $filter.value
               }
             }
           }

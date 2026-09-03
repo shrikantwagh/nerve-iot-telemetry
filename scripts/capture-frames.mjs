@@ -81,6 +81,16 @@ try {
   const screens = [
     { hash: '#/', name: 'overview', label: 'fleet overview - live totals', settle: 9000 },
     { hash: '#/fleet', name: 'fleet', label: 'device grid, filters, live status', settle: 8000 },
+    { hash: '#/incidents', name: 'incidents', label: 'incidents - alerts correlated into clusters', settle: 8000 },
+    // The single most important frame in the set: it is the difference between showing a
+    // red graph and saying what is wrong. Longest settle because the detail endpoint
+    // assembles alerts, devices, the analysis and the timeline in one request.
+    {
+      hash: '#/incidents/4',
+      name: 'incident-detail',
+      label: 'incident detail - root cause, evidence, runbook',
+      settle: 13000,
+    },
     { hash: '#/devices/2', name: 'device-detail', label: 'device detail - real telemetry charts', settle: 12000 },
     { hash: '#/rules', name: 'rules', label: 'rules + natural-language composer', settle: 7000 },
     { hash: '#/admin', name: 'admin', label: 'admin - keys, types, AI activity', settle: 8000 },

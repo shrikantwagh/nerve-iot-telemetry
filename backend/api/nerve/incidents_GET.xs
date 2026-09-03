@@ -97,14 +97,14 @@ query "incidents" verb=GET {
             severity          : $incident.severity
             state             : $incident.state
             site_id           : $incident.site_id
-            site_name         : $site|get:"name"
+            site_name         : $site.name
             device_count      : $incident.device_count
             alert_count       : $incident.alert_count
             opened_at         : $incident.opened_at
             resolved_at       : $incident.resolved_at
             age_seconds       : $age_seconds
             assigned_to       : $incident.assigned_to
-            assignee_name     : $assignee|get:"name"
+            assignee_name     : $assignee.name
             ai_summary        : $incident.ai_summary
             ai_confidence     : $incident.ai_confidence
             ai_fallback_used  : $incident.ai_fallback_used
