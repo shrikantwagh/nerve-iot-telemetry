@@ -11,7 +11,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
     }
 
     // How many 5-minute rollup buckets to feed the model per (device, metric) pair. Shape beats a single number, but the prompt still has to fit.
-    int trend_buckets?=12
+    int trend_buckets?=12 filters=min:1|max:48
 
     // Set false to rebuild the deterministic analysis without spending an inference - used by the seeder and by anyone testing the fallback path.
     bool call_ai?=true
@@ -216,13 +216,13 @@ query "incidents/{incident_id}/analyze" verb=POST {
           sort = {metric_rollup.bucket_ts: "desc"}
           return = {
             type  : "list"
-            paging: {page: 1, per_page: $input.trend_buckets, metadata: false}
+            paging: {page: 1, per_page: $input.trend_buckets}
           }
         } as $recent_buckets
 
-        // Oldest to newest, which is the only order a trend reads correctly in.
+        // Oldest to newest, which is the only order a trend reads correctly in. safe_array|filter_empty rather than a bare read, because safe_array turns a missing items key into [null] and one null bucket would poison the whole series.
         var $ordered_buckets {
-          value = ($recent_buckets|safe_array)|reverse
+          value = (($recent_buckets.items|safe_array)|filter_empty)|reverse
         }
 
         // Formatted averages; two decimals because raw sensor floats add length without adding signal.

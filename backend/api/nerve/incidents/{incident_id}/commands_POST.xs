@@ -94,14 +94,19 @@ query "incidents/{incident_id}/commands" verb=POST {
       value = []
     }
 
+    // safe_array turns an omitted list into [null], so filter_empty is what actually distinguishes "no narrowing" from "narrow to nothing".
+    var $narrow_list {
+      value = ($input.device_ids|safe_array)|filter_empty
+    }
+
     // A narrowing list is only a narrowing list when it has entries; an empty array means the same as omitting it.
     var $is_narrowed {
-      value = ($input.device_ids != null) && (($input.device_ids|count) > 0)
+      value = ($narrow_list|count) > 0
     }
 
     conditional {
       if ($is_narrowed) {
-        foreach ($input.device_ids) {
+        foreach ($narrow_list) {
           each as $requested_id {
             conditional {
               if (($unique_affected|in:$requested_id) == true) {

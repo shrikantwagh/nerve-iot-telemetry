@@ -226,14 +226,20 @@ query "incidents/{incident_id}/postmortem" verb=POST {
       }
     }
 
+    // Closed incidents get a real end time, and the duration is measured to it rather than to now. Guarded on alert_count too, because array_min over an empty window has no answer.
     conditional {
-      if ($incident.resolved_at != null) {
+      if (($incident.resolved_at != null) && ($alert_count > 0)) {
         var.update $span_end {
           value = ($incident.resolved_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC"
         }
 
         var.update $duration_minutes {
           value = (((($incident.resolved_at|to_ms) - ($fired_ms|array_min)) / 60000))|round:1
+        }
+      }
+      elseif ($incident.resolved_at != null) {
+        var.update $span_end {
+          value = ($incident.resolved_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC"
         }
       }
     }

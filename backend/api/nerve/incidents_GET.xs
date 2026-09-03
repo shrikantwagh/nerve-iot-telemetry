@@ -6,10 +6,10 @@ query "incidents" verb=GET {
 
   input {
     // Page cursor. 1-based to match Xano's own paging envelope.
-    int page?=1
+    int page?=1 filters=min:1
 
     // Bounded so a client cannot ask for the whole table and stall the enrichment loop below.
-    int per_page?=25
+    int per_page?=25 filters=min:1|max:100
 
     // Explicit state filter. Supplying any value - including "resolved" - overrides the unresolved-only default.
     enum state? {

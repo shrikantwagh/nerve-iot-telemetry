@@ -203,6 +203,20 @@ security.create_uuid as $uuid
 
 ## 5. Expressions & filters
 
+**TRAP: the documented filter ALIASES are rejected by the language server.**
+`expressions/filters` lists alias names alongside every canonical one, but only the
+canonical name parses. Confirmed rejections so far:
+
+| Documented alias | Use instead |
+|---|---|
+| `num_max`, `num_min` | no scalar max/min exists - write an explicit `conditional` (bare `max`/`min` are the ARRAY reducers, not scalar) |
+| `array_keys` | `keys` |
+| `fsort` | `sort` |
+| `array_push` | `push` |
+
+Assume every alias is unavailable and use the canonical name. The validator catches
+these, so run it rather than trusting the docs table.
+
 - String concat is `~`:  `"Device " ~ $device.name ~ " is hot"`
 - Filters pipe off a value: `$input.email|trim|lower`, `$obj|get:"key"`,
   `$list|count`, `$n|round:2`, `$arr|first`, `$text|split:" "`
