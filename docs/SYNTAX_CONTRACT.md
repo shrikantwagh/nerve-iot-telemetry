@@ -196,8 +196,18 @@ security.check_password { text_password = $input.password  hash_password = $user
 security.create_uuid as $uuid
 ```
 
-`api.request` returns `{response: <parsed body>, status: <int>, headers: ...}`. Check
-`$res.status` before trusting `$res.response`.
+`api.request` nests its result one level deeper than looks natural:
+
+```xs
+$res.response.status    // HTTP status code
+$res.response.result    // parsed body
+$res.response.headers   // response headers
+```
+
+NOT `$res.status` / `$res.response`. Also note `params` is the request BODY for
+POST/PUT/PATCH, not query parameters - counterintuitive but consistent. Getting the
+nesting wrong fails at RUNTIME only (`Unable to locate var: res.status`), and the
+validator cannot catch it, so check `$res.response.status` before trusting the body.
 
 ---
 

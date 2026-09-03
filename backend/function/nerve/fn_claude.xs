@@ -119,14 +119,20 @@ function "Nerve/fn_claude" {
           timeout = 45
         } as $res
 
-        // Copy out of the step result so the values survive past this block.
+        // api.request nests its result ONE LEVEL DEEPER than is obvious:
+        //   $res.response.status  - the HTTP status
+        //   $res.response.result  - the parsed body
+        //   $res.response.headers - response headers
+        // Not $res.status / $res.response. This was wrong until the key was configured,
+        // and it could not surface before then: with no key the request block never ran,
+        // so `Unable to locate var: res.status` waited until the first real call.
         var.update $status {
-          value = $res.status
+          value = $res.response.status
         }
 
         // Body is only trusted after the status check below.
         var.update $raw {
-          value = $res.response
+          value = $res.response.result
         }
       }
     }
@@ -170,9 +176,13 @@ function "Nerve/fn_claude" {
         }
       }
       elseif ($can_call) {
-        // 429 / 5xx / 400: record it and let the caller apply its own deterministic analysis.
+        // 429 / 5xx / 400: record it and let the caller apply its own deterministic
+        // analysis. The response BODY is included because the status alone is not
+        // actionable - a 400 from the Messages API always explains itself in the body
+        // ("max_tokens: ...", "model: ...", unparseable JSON), and logging only the
+        // number cost a debugging round trip.
         var.update $fail_reason {
-          value = "Anthropic HTTP " ~ ($status|to_text)
+          value = ("Anthropic HTTP " ~ ($status|to_text) ~ ": " ~ ($raw|json_encode))|substr:0:600
         }
       }
       else {
