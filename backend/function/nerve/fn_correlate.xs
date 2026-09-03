@@ -326,9 +326,18 @@ function "Nerve/fn_correlate" {
           value = $previous_alerts + $member_count
         }
 
-        // Device count cannot be summed (the same device recurs), so keep the high-water mark.
+        // Device count cannot be summed (the same device recurs across sweeps), so keep the high-water mark.
         var $total_devices {
-          value = $previous_devices|num_max:$device_count
+          value = $device_count
+        }
+
+        // Explicit comparison rather than a max filter: the scalar min/max names collide with the array ones.
+        conditional {
+          if ($previous_devices > $device_count) {
+            var.update $total_devices {
+              value = $previous_devices
+            }
+          }
         }
 
         // Filled by whichever branch runs; the alert-attachment loop needs it afterwards.

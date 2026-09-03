@@ -18,6 +18,9 @@ function "Nerve/fn_evaluate_rules" {
     // {metric_key: z_score} from fn_update_baseline, consumed by the "anomaly" condition.
     json z_scores?
 
+    // {metric_key: previous_value} from fn_update_baseline's response. Required for correct flatline/rate_of_change results: the caller advances the baseline first (to get z-scores), which overwrites metric_baseline.last_value with the CURRENT reading - so the row can no longer supply the prior one.
+    json previous_values?
+
     // Reading timestamp; defaults to now when the device did not stamp it.
     timestamp? ts?
   }
@@ -76,9 +79,18 @@ function "Nerve/fn_evaluate_rules" {
           return = {type: "single"}
         } as $baseline
 
-        // Previous value, hoisted so the switch arms stay one-liners.
+        // Previous value, hoisted so the switch arms stay one-liners. The row is only the fallback: it is correct when rules run before the baseline advance, and stale-by-one-reading when they run after.
         var $prev_value {
           value = $baseline|get:"last_value"
+        }
+
+        // A caller-supplied previous value always wins, because only the caller knows whether it already advanced the baseline for this reading.
+        conditional {
+          if (($input.previous_values|get:$rule.metric_key) != null) {
+            var.update $prev_value {
+              value = $input.previous_values|get:$rule.metric_key
+            }
+          }
         }
 
         // Cooldown. Without this a rule that is genuinely firing mints one alert per reading and buries the operator - the precise alert-fatigue failure Nerve exists to fix.
@@ -119,19 +131,19 @@ function "Nerve/fn_evaluate_rules" {
         switch ($rule.condition) {
           case ("gt") {
             var.update $hit {
-              value = ($value != null) && ($value > $rule.threshold)
+              value = ($value != null) && ($rule.threshold != null) && ($value > $rule.threshold)
             }
           } break
 
           case ("lt") {
             var.update $hit {
-              value = ($value != null) && ($value < $rule.threshold)
+              value = ($value != null) && ($rule.threshold != null) && ($value < $rule.threshold)
             }
           } break
 
           case ("outside_range") {
             var.update $hit {
-              value = ($value != null) && (($value < $rule.threshold) || ($value > $rule.threshold_high))
+              value = ($value != null) && ($rule.threshold != null) && ($rule.threshold_high != null) && (($value < $rule.threshold) || ($value > $rule.threshold_high))
             }
           } break
 
@@ -149,7 +161,7 @@ function "Nerve/fn_evaluate_rules" {
 
           case ("rate_of_change") {
             var.update $hit {
-              value = ($value != null) && ($prev_value != null) && ((($value - $prev_value)|abs) > $rule.threshold)
+              value = ($value != null) && ($prev_value != null) && ($rule.threshold != null) && ((($value - $prev_value)|abs) > $rule.threshold)
             }
           } break
 

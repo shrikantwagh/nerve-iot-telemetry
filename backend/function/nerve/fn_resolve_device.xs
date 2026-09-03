@@ -46,7 +46,7 @@ function "Nerve/fn_resolve_device" {
     }
 
     // Non-throwing failure channel: a dangling reference is a caller mistake, not a server fault.
-    var $error {
+    var $fail_reason {
       value = null
     }
 
@@ -119,7 +119,7 @@ function "Nerve/fn_resolve_device" {
         // Refuse to write a device pointing at a type or site that does not exist - a half-provisioned row is worse than none, and both columns are non-null.
         conditional {
           if (($device_type|is_null) || ($site|is_null)) {
-            var.update $error {
+            var.update $fail_reason {
               value = "Unknown device_type_code or site_code for serial " ~ $input.serial ~ "; device not created."
             }
           }
@@ -156,13 +156,13 @@ function "Nerve/fn_resolve_device" {
     // Lookup-only mode found nothing: say so rather than returning a bare null the caller has to interpret.
     conditional {
       if (($device_found == false) && ($input.create_if_missing == false)) {
-        var.update $error {
+        var.update $fail_reason {
           value = "No device registered with serial " ~ $input.serial ~ "."
         }
       }
     }
   }
 
-  response = {device: $device, created: $created, error: $error}
+  response = {device: $device, created: $created, error: $fail_reason}
   tags = ["nerve"]
 }

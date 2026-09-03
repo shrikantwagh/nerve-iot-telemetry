@@ -45,6 +45,11 @@ function "Nerve/fn_update_baseline" {
       value = 0
     }
 
+    // The reading before this one, returned to the caller. This function overwrites last_value, so the rule engine cannot read the *previous* value off the row afterwards - it has to be handed down.
+    var $prev_last_value {
+      value = null
+    }
+
     // Adopt the persisted state, including the row's own alpha so a metric can be tuned individually.
     conditional {
       if ($seeded == false) {
@@ -62,6 +67,10 @@ function "Nerve/fn_update_baseline" {
 
         var.update $prev_n {
           value = $baseline.sample_count
+        }
+
+        var.update $prev_last_value {
+          value = $baseline.last_value
         }
       }
     }
@@ -151,11 +160,12 @@ function "Nerve/fn_update_baseline" {
   }
 
   response = {
-    z_score     : $z
-    ewma        : $ewma_new
-    ewmv        : $ewmv_new
-    sample_count: $n
-    warmed_up   : $warmed_up
+    z_score       : $z
+    ewma          : $ewma_new
+    ewmv          : $ewmv_new
+    sample_count  : $n
+    warmed_up     : $warmed_up
+    previous_value: $prev_last_value
   }
   tags = ["nerve"]
 }

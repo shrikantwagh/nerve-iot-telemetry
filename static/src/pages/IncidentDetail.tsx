@@ -515,9 +515,13 @@ function RootCauseCard({
   onChanged: () => void
 }) {
   const [done, setDone] = useState<string[]>([])
+  // Latency is only on the /analyze response, not on the stored incident, so it is
+  // reported for the run you just watched and omitted on a cold page load.
+  const [latencyMs, setLatencyMs] = useState<number | null>(null)
 
   const analyze = useAction(async () => {
     const res = await api.incidents.analyze(incident.id)
+    setLatencyMs(typeof res.latency_ms === 'number' ? res.latency_ms : null)
     onChanged()
     return res
   })
@@ -692,6 +696,7 @@ function RootCauseCard({
             <AiProvenance
               model={incident.ai_model}
               generatedAt={incident.ai_generated_at}
+              latencyMs={latencyMs}
               fallbackUsed={incident.ai_fallback_used}
               what="analysis"
             />

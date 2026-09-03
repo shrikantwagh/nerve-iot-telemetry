@@ -126,9 +126,18 @@ function "Nerve/fn_compute_health" {
       value = $open_predictions * 10
     }
 
-    // Clamp to the column's documented 0-100 range; num_max lifts the floor, num_min caps the ceiling.
-    var.update $score {
-      value = ($score|num_max:0)|num_min:100
+    // Clamp to the column's documented 0-100 range. Written as a conditional because the scalar min/max filter names collide with the array ones.
+    conditional {
+      if ($score < 0) {
+        var.update $score {
+          value = 0
+        }
+      }
+      elseif ($score > 100) {
+        var.update $score {
+          value = 100
+        }
+      }
     }
 
     // Start from the current status so an unrecognised value is preserved rather than silently rewritten.

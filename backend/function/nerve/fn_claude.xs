@@ -55,7 +55,7 @@ function "Nerve/fn_claude" {
     }
 
     // Non-fatal reason string; ends up on the ai_insight row for debugging without breaking the caller.
-    var $error {
+    var $fail_reason {
       value = null
     }
 
@@ -153,13 +153,13 @@ function "Nerve/fn_claude" {
       }
       elseif ($can_call) {
         // 429 / 5xx / 400: record it and let the caller apply its own deterministic analysis.
-        var.update $error {
+        var.update $fail_reason {
           value = "Anthropic HTTP " ~ ($status|to_text)
         }
       }
       else {
         // No key configured. The product still has to work for a judge with a fresh workspace.
-        var.update $error {
+        var.update $fail_reason {
           value = "ANTHROPIC_API_KEY is not set - deterministic fallback used."
         }
       }
@@ -216,7 +216,7 @@ function "Nerve/fn_claude" {
         output_tokens: $output_tokens
         latency_ms   : $latency_ms
         fallback_used: $fallback_used
-        error        : $error
+        error        : $fail_reason
       }
     } as $insight
   }
@@ -229,7 +229,7 @@ function "Nerve/fn_claude" {
     model        : $model
     insight_id   : $insight.id
     latency_ms   : $latency_ms
-    error        : $error
+    error        : $fail_reason
   }
   tags = ["nerve"]
 }
