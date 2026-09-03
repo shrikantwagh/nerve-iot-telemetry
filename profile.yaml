@@ -1,0 +1,12 @@
+# Xano project-local profile — pins this project to a profile in ~/.xano/credentials.yaml.
+# No secrets here: the access token always comes from credentials.yaml.
+# Precedence: an explicit -p/--profile or XANO_PROFILE overrides this file entirely.
+
+# Profile to use (a profile name from ~/.xano/credentials.yaml):
+profile: default
+
+# Optional per-project overrides — uncomment and edit any you need:
+workspace: 168172
+# instance_origin: https://your-instance.xano.io
+# account_origin: https://app.xano.com
+# branch: main

@@ -1,0 +1,27 @@
+# Xano — never commit resolved secrets. `profile.yaml` itself is safe (profile name +
+# workspace id only), but env.yaml holds real environment-variable VALUES.
+env.yaml
+*.secret
+
+# Local config that carries the ingest API key
+.env
+.env.local
+simulator/.env
+frontend/.env
+frontend/.env.local
+
+# Dependencies & build output
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
