@@ -1,0 +1,223 @@
+@import 'tailwindcss';
+
+/*
+ * Nerve design tokens.
+ *
+ * The chart palette is the validated default from the dataviz method — the eight
+ * categorical slots in their fixed order, the blue sequential ramp, and the reserved
+ * four-step status palette. Both modes are *selected*, not derived: the dark column is
+ * the same hues re-stepped for the dark surface and validated against it.
+ *
+ * Validation (scripts/validate_palette.js, series slots 1-4):
+ *   light  PASS  worst adjacent CVD dE 9.1 · normal-vision dE 22.9
+ *   dark   PASS  worst adjacent CVD dE 8.4 · normal-vision dE 19.8
+ * Light mode WARNs on aqua (2.74:1) and yellow (2.11:1) against the surface, so the
+ * relief rule applies: every chart ships direct end-labels and a table view. That is
+ * why ChartFrame has a non-optional "Table" toggle.
+ *
+ * Dark values are declared under BOTH the media query and the [data-theme] scope so an
+ * explicit user choice wins in either direction.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --surface-0: #f6f5f2; /* page ground */
+  --surface-1: #fcfcfb; /* card / chart surface */
+  --surface-2: #f0efec; /* raised rows, table stripes */
+  --surface-3: #e6e5e0; /* hairline / divider */
+
+  /* Ink */
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #82817a;
+  --text-inverse: #fcfcfb;
+
+  /* Categorical series — fixed order, never cycled */
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #4a3aa7; /* violet */
+  --series-8: #e34948; /* red */
+
+  /* Sequential (magnitude) — one hue, light to dark */
+  --seq-100: #cde2fb;
+  --seq-200: #9ec5f4;
+  --seq-300: #6da7ec;
+  --seq-400: #3987e5;
+  --seq-500: #256abf;
+  --seq-600: #184f95;
+  --seq-700: #0d366b;
+
+  /* Status — reserved. Never used for a series. Always paired with icon + label. */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  /* Chart chrome — one step off the surface, hairline, solid, recessive */
+  --grid: #e6e5e0;
+  --axis: #cfcec8;
+
+  --accent: #2a78d6;
+  --accent-soft: rgba(42, 120, 214, 0.1);
+  --focus-ring: rgba(42, 120, 214, 0.45);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --surface-3: #33332f;
+
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8e85;
+    --text-inverse: #121211;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+
+    --seq-100: #0d366b;
+    --seq-200: #184f95;
+    --seq-300: #256abf;
+    --seq-400: #3987e5;
+    --seq-500: #6da7ec;
+    --seq-600: #9ec5f4;
+    --seq-700: #cde2fb;
+
+    --grid: #2b2b28;
+    --axis: #40403b;
+
+    --accent: #3987e5;
+    --accent-soft: rgba(57, 135, 229, 0.16);
+    --focus-ring: rgba(57, 135, 229, 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface-0: #121211;
+  --surface-1: #1a1a19;
+  --surface-2: #232322;
+  --surface-3: #33332f;
+
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8f8e85;
+  --text-inverse: #121211;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --seq-100: #0d366b;
+  --seq-200: #184f95;
+  --seq-300: #256abf;
+  --seq-400: #3987e5;
+  --seq-500: #6da7ec;
+  --seq-600: #9ec5f4;
+  --seq-700: #cde2fb;
+
+  --grid: #2b2b28;
+  --axis: #40403b;
+
+  --accent: #3987e5;
+  --accent-soft: rgba(57, 135, 229, 0.16);
+  --focus-ring: rgba(57, 135, 229, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Proportional figures for hero and stat-tile values; tabular only inside columns. */
+.num-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Wide content scrolls inside its own container; the page body never scrolls sideways. */
+.scroll-x {
+  overflow-x: auto;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes nerve-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.live-dot {
+  animation: nerve-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
