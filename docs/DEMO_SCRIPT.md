@@ -137,10 +137,10 @@ Jump to **Predictions**:
 
 ### 2:35–3:00 — What Xano is doing, and close
 
-> "All of this is Xano. Sixteen tables, three API groups, six cron tasks, API-key
-> middleware for the devices, and the Anthropic call happening **inside** the Xano function
-> stack — so the key never reaches the browser, and every inference is logged with its
-> model, tokens, and latency."
+> "All of this is Xano. Seventeen tables, three API groups, forty-six endpoints, six cron
+> tasks, hashed API-key auth for the devices, and the Anthropic call happening **inside**
+> the Xano function stack — so the key never reaches the browser, and every inference is
+> logged with its model, tokens, and latency."
 
 Show **Admin → AI activity** for two seconds.
 
