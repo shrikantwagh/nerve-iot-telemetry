@@ -46,7 +46,7 @@ push and the CLI writes them back. Inventing one corrupts object identity.
 api_group Nerve {
   description = "..."
   canonical = "nerve"          // THE URL SEGMENT: /api:nerve/...
-  history = {inherit: false}   // see §8 - request history
+  history = 0                  // INTEGER: statements logged per request (see §8)
 }
 
 // Endpoint. Path is quoted when it contains / or {}.
@@ -250,12 +250,18 @@ security.create_uuid as $uuid
 
 ## 8. Request history
 
-Xano logs every request body into the instance database by default. For the ingest group
-that is fatal — telemetry would dwarf the telemetry. Set on the ingest API group:
+Xano logs request statements into the instance database by default. For the ingest group
+that is fatal - telemetry request bodies would dwarf the telemetry itself.
+
+`history` on an `api_group` is an **INTEGER** - the number of statements retained per
+request - NOT an object. `history = {inherit: false}` is a parse error.
 
 ```xs
-history = {inherit: false, enabled: false}
+api_group NerveIngest {
+  canonical = "ingest"
+  history = 0        // log nothing
+}
 ```
 
-If the language server rejects that shape, fall back to `history = {inherit: false}` and
-note it for a manual toggle in the UI. Validate, do not assume.
+(An earlier revision of this contract said `history = {inherit: false, enabled: false}`.
+That was wrong and the language server rejects it.)
