@@ -9,6 +9,20 @@ hosted on Xano static hosting.
 
 **Repository:** https://github.com/shrikantwagh/nerve-iot-telemetry
 
+![Nerve demo reel](media/nerve-demo.gif)
+
+*Every number in these frames is real data that came through the real ingest pipeline —
+captured from the running app against a live Xano backend, not mocked. Regenerate with
+`node scripts/capture-frames.mjs && python scripts/build-demo-gif.py`.*
+
+| | |
+|---|---|
+| ![Fleet overview](media/02-overview.png) | ![Device grid](media/03-fleet.png) |
+| **Overview** — hero figure, KPI tiles, health distribution, per-site rollup | **Fleet** — filterable grid with live signals and health meters |
+| ![Device detail](media/04-device-detail.png) | ![Ask console](media/08-ask-answered.png) |
+| **Device detail** — real telemetry with the *nominal band declared by the device type* shaded behind it | **Ask** — an English question, the answer, and the validated query plan that produced it |
+
+
 ---
 
 ## The software we replaced, and why

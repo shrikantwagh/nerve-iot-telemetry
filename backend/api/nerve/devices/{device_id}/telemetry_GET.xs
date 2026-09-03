@@ -121,6 +121,32 @@ query "devices/{device_id}/telemetry" verb=GET {
       }
     }
 
+    // ROLLUP FALLBACK. Without this the chart is permanently empty on any instance where
+    // task_rollup_metrics has not run - which is every fresh install, and every instance
+    // on a plan that does not allow background tasks at all. The endpoint would answer
+    // 200 with source "rollup" and zero points, which reads as "this device has no
+    // telemetry" when the raw rows are sitting right there.
+    //
+    // One count query is cheap next to being silently wrong. Only downgrades: an explicit
+    // resolution=rollup override still reports rollup, so the operator override stays
+    // honest about what it asked for.
+    conditional {
+      if ($source == "rollup" && $input.resolution != "rollup") {
+        db.query metric_rollup {
+          where = $db.metric_rollup.device_id == $input.device_id
+          return = {type: "count"}
+        } as $rollup_available
+
+        conditional {
+          if (($rollup_available|first_notnull:0) == 0) {
+            var.update $source {
+              value = "raw"
+            }
+          }
+        }
+      }
+    }
+
     // A comma list is split, trimmed and de-duplicated. filter_empty drops the blanks a trailing comma leaves behind.
     var $raw_keys {
       value = $input.metric_key|split:","

@@ -469,6 +469,87 @@ function normalizeHealthDistribution(wire: HealthDistributionWire | null): Healt
   }
 }
 
+/**
+ * Flatten the `GET /devices/{id}` envelope into the flat `Device` the screens expect.
+ *
+ * The endpoint returns `{ device, site, device_type, metrics_latest, uplink,
+ * firing_alerts, open_predictions, recent_commands }` — verified live. The client typed
+ * it as a flat Device, so `device.name` was undefined, and EditDeviceModal's
+ * `useState(device.name)` then `name.trim()` threw during render. Same class of bug as
+ * the list envelopes.
+ *
+ * Also derives `site_name` / `device_type_name`, so a component can render a row without
+ * reaching into two nested objects.
+ */
+function normalizeDeviceDetail(wire: unknown): Device {
+  if (!wire || typeof wire !== 'object') return {} as Device
+  const w = wire as Record<string, unknown>
+
+  // Tolerate a flat response too, in case the endpoint is ever simplified.
+  const inner = (w.device && typeof w.device === 'object' ? w.device : w) as Partial<Device>
+  const site = (w.site ?? undefined) as Site | undefined
+  const deviceType = (w.device_type ?? undefined) as DeviceType | undefined
+
+  return {
+    ...(inner as Device),
+    site,
+    device_type: deviceType,
+    site_name: site?.name ?? (inner as Device).site_name,
+    site_code: site?.code ?? (inner as Device).site_code,
+    device_type_name: deviceType?.name ?? (inner as Device).device_type_name,
+    device_type_category: deviceType?.category ?? (inner as Device).device_type_category,
+    // metrics_latest is promoted to the top level by the endpoint; prefer that, but fall
+    // back to the column on the row itself.
+    metrics_latest: (w.metrics_latest ?? inner.metrics_latest ?? null) as Device['metrics_latest'],
+    firing_alerts: unwrapArray<Alert>(w.firing_alerts ?? [], 'alerts'),
+    open_predictions: unwrapArray<MaintenancePrediction>(w.open_predictions ?? [], 'predictions'),
+    recent_commands: unwrapArray<DeviceCommand>(w.recent_commands ?? [], 'commands'),
+    // A name is load-bearing: several components call .trim() on it.
+    name: (inner as Device).name ?? (inner as Device).serial ?? 'Unknown device',
+  }
+}
+
+/**
+ * Pull one `MetricSeries` out of the multi-series telemetry envelope.
+ *
+ * `GET /devices/{id}/telemetry` returns
+ * `{ device_id, from, to, source, bucket_seconds, point_cap, truncated,
+ *    series: [{ metric_key, label, unit, points }] }` — the endpoint accepts a
+ * comma-separated metric list, so the payload is always a list even for one metric.
+ * The client typed it as a flat MetricSeries, so `metric.points` was undefined and
+ * MetricChart threw `Cannot read properties of undefined (reading 'map')`.
+ *
+ * Hoists the envelope-level `source` / `truncated` / `point_cap` onto the series,
+ * because those describe the data and the chart footnote reports them.
+ */
+function normalizeMetricSeries(wire: unknown, requestedKey: string): MetricSeries {
+  const empty: MetricSeries = { metric_key: requestedKey, points: [], source: 'raw' }
+  if (!wire || typeof wire !== 'object') return empty
+
+  const w = wire as Record<string, unknown>
+  // Tolerate an already-flat response.
+  if (Array.isArray(w.points)) return { ...(w as unknown as MetricSeries) }
+
+  const series = Array.isArray(w.series) ? (w.series as Record<string, unknown>[]) : []
+  const first = requestedKey.split(',')[0]?.trim()
+  const match = series.find((s) => s.metric_key === first) ?? series[0]
+  if (!match) return { ...empty, source: (w.source as MetricSeries['source']) ?? 'raw' }
+
+  return {
+    metric_key: (match.metric_key as string) ?? requestedKey,
+    label: match.label as string | undefined,
+    // The endpoint has been seen returning a NUMBER for unit on some metrics, so coerce
+    // rather than letting a stray number reach a template string.
+    unit: match.unit === null || match.unit === undefined ? undefined : String(match.unit),
+    nominal_min: (match.nominal_min ?? null) as number | null,
+    nominal_max: (match.nominal_max ?? null) as number | null,
+    points: Array.isArray(match.points) ? (match.points as MetricSeries['points']) : [],
+    source: ((w.source as string) === 'rollup' ? 'rollup' : 'raw') as MetricSeries['source'],
+    truncated: Boolean(w.truncated),
+    point_cap: typeof w.point_cap === 'number' ? w.point_cap : undefined,
+  }
+}
+
 export const fleet = {
   overview: (signal?: AbortSignal) =>
     request<FleetOverviewWire>('/fleet/overview', { signal }).then(normalizeOverview),
@@ -495,7 +576,8 @@ export const devices = {
   list: (params: DeviceListParams = {}, signal?: AbortSignal) =>
     request<unknown>('/devices', { query: params, signal }).then((r) => unwrapList<Device>(r, 'devices')),
 
-  get: (id: number, signal?: AbortSignal) => request<Device>(`/devices/${id}`, { signal }),
+  get: (id: number, signal?: AbortSignal) =>
+    request<unknown>(`/devices/${id}`, { signal }).then(normalizeDeviceDetail),
 
   create: (payload: Partial<Device> & { serial: string; name: string; device_type_id: number; site_id: number }) =>
     request<Device>('/devices', { method: 'POST', body: payload }),
@@ -509,7 +591,10 @@ export const devices = {
     id: number,
     params: { metric_key: string; from?: string; to?: string; resolution?: string },
     signal?: AbortSignal
-  ) => request<MetricSeries>(`/devices/${id}/telemetry`, { query: params, signal }),
+  ) =>
+    request<unknown>(`/devices/${id}/telemetry`, { query: params, signal }).then((r) =>
+      normalizeMetricSeries(r, params.metric_key)
+    ),
 
   timeline: (id: number) =>
     request<unknown>(`/devices/${id}/timeline`).then((r) => unwrapArray<TimelineEntry>(r, 'events')),

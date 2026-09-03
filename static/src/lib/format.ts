@@ -190,3 +190,31 @@ export function pct(n: number | null | undefined): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return '—'
   return `${Math.round(n * 100)}%`
 }
+
+
+/**
+ * Render a free-form `detail` field as text.
+ *
+ * Backend detail payloads are inconsistent by design — a string for most timeline kinds,
+ * an object like `{user_id, source, changes}` for status changes. Passing one straight to
+ * JSX throws "Objects are not valid as a React child" and, without an error boundary,
+ * blanks the screen. This flattens anything to something readable.
+ */
+export function describeDetail(detail: unknown): string {
+  if (detail === null || detail === undefined) return ''
+  if (typeof detail === 'string') return detail
+  if (typeof detail === 'number' || typeof detail === 'boolean') return String(detail)
+  if (Array.isArray(detail)) return detail.map(describeDetail).filter(Boolean).join(', ')
+  if (typeof detail === 'object') {
+    // "source: ui, changes: status" reads better than raw JSON in a timeline row.
+    return Object.entries(detail as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== undefined && v !== '')
+      .map(([k, v]) => {
+        const label = k.replace(/_/g, ' ')
+        if (v !== null && typeof v === 'object') return `${label}: ${Object.keys(v as object).join(', ')}`
+        return `${label}: ${String(v)}`
+      })
+      .join(' · ')
+  }
+  return ''
+}

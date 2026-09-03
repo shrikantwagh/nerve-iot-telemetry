@@ -61,6 +61,7 @@ import {
   pct,
   seriesColorFor,
   timeAgo,
+  describeDetail,
 } from '../lib/format'
 import type {
   Alert,
@@ -1138,7 +1139,7 @@ function TimelineSection({ deviceId }: { deviceId: number }) {
                 </div>
                 {e.detail && (
                   <p className="mt-0.5 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-                    {e.detail}
+                    {describeDetail(e.detail)}
                   </p>
                 )}
                 <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-muted)' }}>
@@ -1169,10 +1170,12 @@ function EditDeviceModal({
   onSaved: () => void
 }) {
   const { isDemo } = useAuth()
-  const [name, setName] = useState(device.name)
+  // Defaulted, not asserted: this modal calls name.trim(), so an absent name has to
+  // become an empty string rather than a crash.
+  const [name, setName] = useState(device.name ?? '')
   const [location, setLocation] = useState(device.location_label ?? '')
   const [firmware, setFirmware] = useState(device.firmware_version ?? '')
-  const [status, setStatus] = useState<DeviceStatus>(device.status)
+  const [status, setStatus] = useState<DeviceStatus>(device.status ?? 'provisioning')
   const [tags, setTags] = useState((device.tags ?? []).join(', '))
   const [notes, setNotes] = useState(device.notes ?? '')
 

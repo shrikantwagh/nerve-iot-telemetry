@@ -289,8 +289,27 @@ Devpost wants a 3:2 ratio, ≤5 MB, up to 15 images. Suggested order:
 5. **Rules** — the natural-language composer with a proposal restated in English
 6. **Admin → AI activity** — model, tokens, latency, fallback flag per inference
 
-Frames 2, 3 and 5 need the Anthropic key set and an incident correlated first — see
-`docs/DEMO_SCRIPT.md` § *Before you record*.
+**Ready to upload now** — captured from the running app against the live backend, in
+`media/`:
+
+| File | Shows |
+|---|---|
+| `media/nerve-demo.gif` | 8-frame reel, 0.78 MB, 22.8s loop — under the 5 MB cap |
+| `media/02-overview.png` | Fleet overview with live totals |
+| `media/03-fleet.png` | Device grid, filters, live signals |
+| `media/04-device-detail.png` | Real telemetry charts with nominal bands |
+| `media/05-rules.png` | Rules list and the natural-language composer |
+| `media/06-admin.png` | API keys, device types, AI activity |
+| `media/08-ask-answered.png` | Ask console with the answer and the validated plan |
+
+**Still missing, and it is the most important one:** an incident-detail frame showing AI
+root cause, confidence, evidence and remediation. That needs the Anthropic key set and a
+fault correlated into an incident first — see `docs/DEMO_SCRIPT.md` § *Before you record*.
+Regenerate everything with:
+
+```bash
+node scripts/capture-frames.mjs && python scripts/build-demo-gif.py
+```
 
 ---
 

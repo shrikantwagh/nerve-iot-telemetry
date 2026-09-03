@@ -356,6 +356,12 @@ export interface TimelineEntry {
   ts: string
   kind: 'alert' | 'command' | 'prediction' | 'status'
   severity?: Severity
+  /**
+   * Free-form. The backend sends a string for most kinds but an OBJECT for status
+   * changes (e.g. `{user_id, source, changes}`), so this is deliberately not typed as
+   * `string` - rendering it directly threw "Objects are not valid as a React child".
+   * Use `describeDetail()` from lib/format to render it.
+   */
   title: string
   detail?: string
   ref_id?: number
