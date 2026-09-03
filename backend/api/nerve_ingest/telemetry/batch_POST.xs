@@ -357,7 +357,7 @@ query "telemetry/batch" verb=POST {
             detail     : {
               inserted       : $inserted
               devices_seen   : $devices_seen
-              readings        : $input.readings|count
+              readings       : $input.readings|count
               backfill       : $input.backfill
               unknown_serials: $unknown_serials
             }
