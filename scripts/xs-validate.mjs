@@ -26,7 +26,7 @@ class McpStdioClient {
   constructor(command, args) {
     this.proc = spawn(command, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      shell: process.platform === 'win32', // npx on Windows is a .cmd shim
+      shell: command === "npx" && process.platform === "win32", // only the npx fallback needs a shell
     });
     this.nextId = 1;
     this.pending = new Map();
@@ -103,14 +103,65 @@ class McpStdioClient {
     return result;
   }
 
+  /**
+   * Killing the spawned process is not enough on Windows: `npx` runs via a `.cmd`
+   * shim, so `proc.kill()` reaps the shell while the actual node grandchild survives
+   * and keeps our event loop alive. That made every invocation hang until the caller's
+   * timeout — validation finished in seconds but the command took two minutes. So we
+   * kill the whole process tree, unref the streams, and (in `main`) exit explicitly.
+   */
   close() {
     try {
       this.proc.stdin.end();
-      this.proc.kill();
+    } catch {
+      /* already closed */
+    }
+    try {
+      if (process.platform === 'win32' && this.proc.pid) {
+        // /T kills the tree, /F forces it. Detached and silenced so it cannot itself
+        // become the thing holding the loop open.
+        spawn('taskkill', ['/pid', String(this.proc.pid), '/T', '/F'], {
+          stdio: 'ignore',
+          detached: true,
+        }).unref();
+      } else {
+        this.proc.kill('SIGKILL');
+      }
     } catch {
       /* already gone */
     }
+    try {
+      this.proc.stdout?.destroy();
+      this.proc.stderr?.destroy();
+      this.proc.unref();
+    } catch {
+      /* ignore */
+    }
   }
+}
+
+/**
+ * Locate the MCP server.
+ *
+ * `npx -y @xano/developer-mcp` works but re-checks the npm registry on every
+ * invocation, which cost ~60s per call — brutal when validating dozens of files. If the
+ * package is installed (globally or locally) we run its entry point directly with the
+ * current node binary, which starts in well under a second. npx stays as the fallback so
+ * a fresh clone still works with no install step.
+ */
+function resolveServerCommand() {
+  const candidates = [
+    // npm global prefix on Windows and on POSIX.
+    path.join(process.env.APPDATA ?? '', 'npm', 'node_modules', '@xano', 'developer-mcp', 'dist', 'index.js'),
+    path.join(process.env.npm_config_prefix ?? '', 'lib', 'node_modules', '@xano', 'developer-mcp', 'dist', 'index.js'),
+    '/usr/local/lib/node_modules/@xano/developer-mcp/dist/index.js',
+    // A local devDependency, if someone adds one.
+    path.join(ROOT, 'node_modules', '@xano', 'developer-mcp', 'dist', 'index.js'),
+  ];
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return [process.execPath, [c]];
+  }
+  return ['npx', ['-y', '@xano/developer-mcp']];
 }
 
 function collectXsFiles(dir) {
@@ -142,7 +193,7 @@ async function main() {
   const jsonOut = args.includes('--json');
   const files = args.filter((a) => !a.startsWith('--'));
 
-  const client = new McpStdioClient('npx', ['-y', '@xano/developer-mcp']);
+  const client = new McpStdioClient(...resolveServerCommand());
   try {
     const init = await client.initialize();
     const serverName = init?.serverInfo?.name ?? 'unknown';
@@ -220,7 +271,20 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(`validator error: ${err.message}`);
-  process.exitCode = 1;
-});
+main()
+  .catch((err) => {
+    console.error(`validator error: ${err.message}`);
+    process.exitCode = 1;
+  })
+  .finally(() => {
+    // Exit explicitly. Even with the tree killed, a lingering stdio handle can keep
+    // node alive; the work is done by here, so there is nothing to lose by leaving now.
+    // Flush first, or the last lines of output can be dropped on Windows pipes.
+    const code = process.exitCode ?? 0;
+    const flush = (stream) =>
+      new Promise((resolve) => {
+        if (stream.writableLength === 0) resolve();
+        else stream.write('', () => resolve());
+      });
+    Promise.all([flush(process.stdout), flush(process.stderr)]).then(() => process.exit(code));
+  });
