@@ -212,7 +212,7 @@ class IngestClient {
       if (this.verbose) console.log(`[dry-run] POST ${pathname}`, JSON.stringify(body).slice(0, 400));
       return { ok: true, dryRun: true };
     }
-    const url = `${this.apiBase}/api:ingest${pathname}`;
+    const url = `${this.apiBase}/api:nerve-ingest${pathname}`;
     // Retry with backoff: a demo should survive a cold-start or a brief 5xx.
     for (let attempt = 0; attempt < 4; attempt += 1) {
       try {
@@ -291,7 +291,7 @@ function readingFor(device, tsMs, dtSeconds, simElapsed) {
 // ---------------------------------------------------------------------------
 
 async function registerFleet(client, devices) {
-  console.log(`Registering ${devices.length} devices via POST /api:ingest/register ...`);
+  console.log(`Registering ${devices.length} devices via POST /api:nerve-ingest/register ...`);
   let created = 0;
   let existing = 0;
   for (const d of devices) {

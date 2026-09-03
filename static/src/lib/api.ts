@@ -50,7 +50,7 @@ export const INSTANCE_BASE = RAW_BASE || 'https://x8ki-letl-twmt.n7.xano.io'
 
 /** Group canonicals, set on each `api_group` in the backend. */
 const GROUP = {
-  auth: 'auth',
+  auth: 'nerve-auth',
   nerve: 'nerve',
 } as const
 

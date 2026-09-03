@@ -71,8 +71,10 @@ if (!CFG.base) {
 const state = { token: null, user: null, deviceId: null, incidentId: null, alertId: null, ruleId: null };
 let requestCount = 0;
 
+const CANONICAL = { auth: 'nerve-auth', nerve: 'nerve', ingest: 'nerve-ingest' };
+
 async function call(group, pathname, { method = 'GET', body, token, apiKey, timeoutMs = 90_000 } = {}) {
-  const url = `${CFG.base}/api:${group}${pathname}`;
+  const url = `${CFG.base}/api:${CANONICAL[group] ?? group}${pathname}`;
   const headers = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
