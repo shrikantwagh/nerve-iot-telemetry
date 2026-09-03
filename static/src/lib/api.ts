@@ -18,6 +18,7 @@ import type {
   ApiKey,
   AuditEntry,
   Device,
+  DeviceCategory,
   DeviceCommand,
   DeviceStatus,
   DeviceType,
@@ -300,6 +301,14 @@ export const auth = {
  * format, and normalising once means a backend rename touches one function instead of
  * every component that reads a tile.
  */
+/** A site as it arrives from the backend, which names the average differently. */
+type SiteWire = Omit<Site, 'avg_health'> & { avg_health_score?: number; avg_health?: number }
+
+const normalizeSite = (s: SiteWire): Site => ({
+  ...s,
+  avg_health: s.avg_health ?? s.avg_health_score ?? 0,
+})
+
 interface FleetOverviewWire {
   generated_at?: number | string
   totals?: {
@@ -313,7 +322,7 @@ interface FleetOverviewWire {
   devices_by_status?: Partial<Record<DeviceStatus, number>>
   incidents_open_by_severity?: Partial<Record<Severity, number>>
   alerts_firing_by_severity?: Partial<Record<Severity, number>>
-  sites?: Site[]
+  sites?: SiteWire[]
   worst_devices?: Device[]
   ai_digest?: AiInsight | null
 }
@@ -337,7 +346,7 @@ function normalizeOverview(wire: FleetOverviewWire | FleetOverview | null): Flee
       status_counts: { ...ZERO_STATUS, ...(flat.status_counts ?? {}) },
       incident_counts: { ...ZERO_SEVERITY, ...(flat.incident_counts ?? {}) },
       alert_counts: { ...ZERO_SEVERITY, ...(flat.alert_counts ?? {}) },
-      sites: flat.sites ?? [],
+      sites: (flat.sites ?? []).map(normalizeSite),
       worst_devices: flat.worst_devices ?? [],
     }
   }
@@ -352,7 +361,7 @@ function normalizeOverview(wire: FleetOverviewWire | FleetOverview | null): Flee
     avg_health: t.avg_health_score ?? 0,
     unhealthy_count: t.below_health_60 ?? 0,
     readings_last_hour: t.readings_last_hour ?? 0,
-    sites: w.sites ?? [],
+    sites: (w.sites ?? []).map(normalizeSite),
     worst_devices: w.worst_devices ?? [],
     digest: w.ai_digest ?? null,
     // Authoritative totals from the backend rather than a sum of the severity buckets,
@@ -362,10 +371,42 @@ function normalizeOverview(wire: FleetOverviewWire | FleetOverview | null): Flee
   }
 }
 
+/** The shape `GET /fleet/health-distribution` actually returns, as observed live. */
+interface HealthDistributionWire {
+  total_devices?: number
+  bucket_size?: number
+  buckets?: { index?: number; label?: string; min?: number; max?: number; count?: number }[]
+  by_category?: {
+    category?: string
+    device_count?: number
+    avg_health_score?: number
+    below_health_60?: number
+  }[]
+}
+
+function normalizeHealthDistribution(wire: HealthDistributionWire | null): HealthDistribution {
+  const w = wire ?? {}
+  return {
+    buckets: (w.buckets ?? []).map((b, i) => ({
+      // The chart keys and labels rows off `bucket`; the backend calls it `label`.
+      bucket: b.label ?? `${b.min ?? i * 10}-${b.max ?? i * 10 + 9}`,
+      from: b.min ?? 0,
+      to: b.max ?? 0,
+      count: b.count ?? 0,
+    })),
+    by_category: (w.by_category ?? []).map((c) => ({
+      category: (c.category ?? 'other') as DeviceCategory,
+      avg_health: c.avg_health_score ?? 0,
+      count: c.device_count ?? 0,
+    })),
+  }
+}
+
 export const fleet = {
   overview: (signal?: AbortSignal) =>
     request<FleetOverviewWire>('/fleet/overview', { signal }).then(normalizeOverview),
-  healthDistribution: () => request<HealthDistribution>('/fleet/health-distribution'),
+  healthDistribution: () =>
+    request<HealthDistributionWire>('/fleet/health-distribution').then(normalizeHealthDistribution),
 }
 
 /**
@@ -412,7 +453,7 @@ export const devices = {
 }
 
 export const sites = {
-  list: () => request<Site[]>('/sites'),
+  list: () => request<SiteWire[]>('/sites').then((rows) => (rows ?? []).map(normalizeSite)),
   create: (payload: Partial<Site> & { code: string; name: string }) =>
     request<Site>('/sites', { method: 'POST', body: payload }),
 }
