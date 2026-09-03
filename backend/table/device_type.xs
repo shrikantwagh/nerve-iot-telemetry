@@ -35,4 +35,5 @@ table device_type {
   ]
 
   tags = ["nerve"]
+  guid = "wT431g1pvVn0EC1jpbPVh4X_bXE"
 }

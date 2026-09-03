@@ -48,4 +48,5 @@ table ai_insight {
   ]
 
   tags = ["nerve"]
+  guid = "k74yKbymXZN_j2qGj8YW2SK2shI"
 }

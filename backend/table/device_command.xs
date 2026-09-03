@@ -43,4 +43,5 @@ table device_command {
   ]
 
   tags = ["nerve"]
+  guid = "XrYHfpJHDIdca3aA1lb06TvfNN8"
 }

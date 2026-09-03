@@ -39,4 +39,5 @@ table nl_query_log {
   ]
 
   tags = ["nerve"]
+  guid = "bRwZddr0Jlf-OlGxXEKBX-ZLsVU"
 }

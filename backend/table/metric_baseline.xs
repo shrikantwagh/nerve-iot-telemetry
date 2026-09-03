@@ -35,4 +35,5 @@ table metric_baseline {
   ]
 
   tags = ["nerve"]
+  guid = "758JsuaBf1Z2sIgfeBslHWgh9wU"
 }

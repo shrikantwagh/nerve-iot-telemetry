@@ -69,4 +69,5 @@ table alert_rule {
   ]
 
   tags = ["nerve"]
+  guid = "IFrU2fYBbSYOSzS6oVpPxFMCWnk"
 }

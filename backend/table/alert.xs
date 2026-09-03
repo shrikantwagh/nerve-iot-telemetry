@@ -58,4 +58,5 @@ table alert {
   ]
 
   tags = ["nerve"]
+  guid = "o2zJdtV8-xNKffTHO5qOvEcbbw4"
 }

@@ -36,4 +36,5 @@ table audit_log {
   ]
 
   tags = ["nerve"]
+  guid = "RQ32ARB3UFQs-fCuW_LsB1dEN38"
 }

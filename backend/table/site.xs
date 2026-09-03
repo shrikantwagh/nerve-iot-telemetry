@@ -25,4 +25,5 @@ table site {
   ]
 
   tags = ["nerve"]
+  guid = "tQukkb44iH8qG3wzq7BpLFVyDqs"
 }

@@ -60,4 +60,5 @@ table device {
   ]
 
   tags = ["nerve"]
+  guid = "SuqbzxD37rOaVE_7Ef60o1sX5T0"
 }

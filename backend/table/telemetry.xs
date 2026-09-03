@@ -33,4 +33,5 @@ table telemetry {
   ]
 
   tags = ["nerve"]
+  guid = "uX6AlOysxfYD3PLNxFUYKKeMVtE"
 }

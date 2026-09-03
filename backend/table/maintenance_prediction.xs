@@ -50,4 +50,5 @@ table maintenance_prediction {
   ]
 
   tags = ["nerve"]
+  guid = "lK84u4hw04ZMCKq314Ox_z8uoRo"
 }

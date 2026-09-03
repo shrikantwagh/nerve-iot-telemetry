@@ -35,4 +35,5 @@ table api_key {
   ]
 
   tags = ["nerve"]
+  guid = "76I10iecRoCdgIee887rSnYczvw"
 }

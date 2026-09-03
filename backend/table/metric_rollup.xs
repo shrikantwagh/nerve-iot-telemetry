@@ -36,4 +36,5 @@ table metric_rollup {
   ]
 
   tags = ["nerve"]
+  guid = "uYd7DbgbQ_TB6U3eA_WIX5uwJ84"
 }
