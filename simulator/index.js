@@ -205,6 +205,11 @@ class IngestClient {
     this.verbose = verbose;
     this.sent = 0;
     this.failed = 0;
+    // Set while a 429 is being waited out, so the caller can say so; counted so the run
+    // summary can tell you the plan is the bottleneck rather than the code.
+    this.rateLimited = false;
+    this.throttleEvents = 0;
+    this.quiet = false;
   }
 
   async post(pathname, body) {
@@ -213,8 +218,20 @@ class IngestClient {
       return { ok: true, dryRun: true };
     }
     const url = `${this.apiBase}/api:nerve-ingest${pathname}`;
-    // Retry with backoff: a demo should survive a cold-start or a brief 5xx.
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+
+    // Retry policy, with 429 handled separately from everything else.
+    //
+    // Xano's Free plan allows 10 requests per 20 SECONDS, instance-wide. A conventional
+    // 400ms-doubling backoff is worse than useless against a window that long: all the
+    // retries land inside the same window, and each one consumes quota it cannot
+    // possibly have regained. That is what made a 4-batch backfill fail outright.
+    //
+    // So a 429 waits out the whole window (and honours Retry-After when the server
+    // sends one), while 5xx and transport errors keep the short exponential backoff
+    // that suits an actually-transient fault.
+    const MAX_ATTEMPTS = 6;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+      const last = attempt === MAX_ATTEMPTS - 1;
       try {
         const res = await fetch(url, {
           method: 'POST',
@@ -225,14 +242,38 @@ class IngestClient {
           body: JSON.stringify(body),
         });
         const text = await res.text();
-        if (res.ok) return text ? JSON.parse(text) : {};
-        // 4xx other than 429 will not fix itself — fail fast and say why.
-        if (res.status !== 429 && res.status < 500) {
+        if (res.ok) {
+          this.rateLimited = false;
+          return text ? JSON.parse(text) : {};
+        }
+
+        if (res.status === 429) {
+          this.rateLimited = true;
+          this.throttleEvents += 1;
+          if (last) {
+            throw new Error(
+              `rate limited by Xano after ${MAX_ATTEMPTS} attempts on ${pathname}. ` +
+                `The Free plan allows 10 requests per 20s across the whole instance; ` +
+                `Essential and above remove the limit.`
+            );
+          }
+          const retryAfter = Number(res.headers.get('retry-after'));
+          const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : RATE_WINDOW_MS;
+          if (!this.quiet) {
+            process.stdout.write(`\n  rate limited - waiting ${Math.ceil(waitMs / 1000)}s for the window to clear...`);
+          }
+          await sleep(waitMs);
+          continue;
+        }
+
+        // Any other 4xx will not fix itself — fail fast and say why.
+        if (res.status < 500) {
           throw new Error(`HTTP ${res.status} ${pathname}: ${text.slice(0, 400)}`);
         }
-        if (attempt === 3) throw new Error(`HTTP ${res.status} ${pathname} after retries: ${text.slice(0, 200)}`);
+        if (last) throw new Error(`HTTP ${res.status} ${pathname} after retries: ${text.slice(0, 200)}`);
       } catch (err) {
-        if (attempt === 3) throw err;
+        // A thrown 429/4xx message is terminal; only transport faults get another go.
+        if (last || /rate limited|HTTP 4/.test(err.message)) throw err;
       }
       await sleep(400 * 2 ** attempt);
     }
@@ -241,6 +282,13 @@ class IngestClient {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Xano's Free-plan window: 10 requests per 20 seconds, instance-wide. A 429 has to be
+ * waited out rather than backed off from, so this is the retry delay - plus a second of
+ * slack, because the window is server-side and our clock is not the one that matters.
+ */
+const RATE_WINDOW_MS = 21_000;
 
 // ---------------------------------------------------------------------------
 // Scenario wiring
