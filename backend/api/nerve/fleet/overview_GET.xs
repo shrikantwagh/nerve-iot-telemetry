@@ -151,6 +151,38 @@ query "fleet/overview" verb=GET {
       }
     }
 
+    // Same trick for device types: the worst-devices rows are rendered with a TYPE
+    // column, and without this it showed an em dash for every device. One small read
+    // beats a per-device join, and there are only a handful of types.
+    db.query device_type {
+      return = {type: "list"}
+      output = ["id", "name", "category"]
+    } as $all_types
+
+    var $type_names {
+      value = {}
+    }
+
+    var $type_categories {
+      value = {}
+    }
+
+    foreach ($all_types) {
+      each as $dtype {
+        var $type_key {
+          value = $dtype.id|to_text
+        }
+
+        var.update $type_names {
+          value = $type_names|set:$type_key:$dtype.name
+        }
+
+        var.update $type_categories {
+          value = $type_categories|set:$type_key:$dtype.category
+        }
+      }
+    }
+
     // Open incidents are the short list the whole product exists to produce, so there are never many. One list read serves both the severity tiles and the per-site column - three count queries could not do the second. "investigating" counts as open: someone is on it, but it is not over.
     db.query incident {
       where = $db.incident.state == "open" || $db.incident.state == "investigating"
@@ -289,16 +321,31 @@ query "fleet/overview" verb=GET {
           value = $site_names|get:$worst_site_key
         }
 
+        var $worst_type_key {
+          value = $worst.device_type_id|to_text
+        }
+
+        var $worst_type_name {
+          value = $type_names|get:$worst_type_key
+        }
+
+        var $worst_type_category {
+          value = $type_categories|get:$worst_type_key
+        }
+
         array.push $worst_devices {
           value = {
-            id          : $worst.id
-            name        : $worst.name
-            serial      : $worst.serial
-            status      : $worst.status
-            health_score: $worst.health_score
-            last_seen_at: $worst.last_seen_at
-            site_id     : $worst.site_id
-            site_name   : $worst_site_name
+            id                   : $worst.id
+            name                 : $worst.name
+            serial               : $worst.serial
+            status               : $worst.status
+            health_score         : $worst.health_score
+            last_seen_at         : $worst.last_seen_at
+            site_id              : $worst.site_id
+            site_name            : $worst_site_name
+            device_type_id       : $worst.device_type_id
+            device_type_name     : $worst_type_name
+            device_type_category : $worst_type_category
           }
         }
       }
