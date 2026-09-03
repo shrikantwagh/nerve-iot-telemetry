@@ -167,7 +167,7 @@ export const DEVICE_TYPES_BY_CODE = Object.fromEntries(DEVICE_TYPES.map((t) => [
 export function buildGenerators(typeCode, rand) {
   switch (typeCode) {
     case 'amr-ld250': {
-      const battery = new Battery({ dischargePctPerHour: randBetween(rand, 9, 14), chargePctPerHour: randBetween(rand, 42, 55) });
+      const battery = new Battery({ rand, dischargePctPerHour: randBetween(rand, 9, 14), chargePctPerHour: randBetween(rand, 42, 55) });
       return {
         battery,
         battery_pct: battery,
@@ -228,7 +228,11 @@ export function buildGenerators(typeCode, rand) {
         voltage_l1_v: new Gauge({ base: nominal, noise: 1.6, min: 0, max: 600, precision: 1 }),
         voltage_l2_v: new Gauge({ base: nominal + randBetween(rand, -1.5, 1.5), noise: 1.6, min: 0, max: 600, precision: 1 }),
         voltage_l3_v: new Gauge({ base: nominal + randBetween(rand, -1.5, 1.5), noise: 1.6, min: 0, max: 600, precision: 1 }),
-        current_a: new Gauge({ base: randBetween(rand, 45, 95), noise: 11, diurnal: 30, min: 0, max: 400, precision: 2 }),
+        // Floored well above zero: a live feeder always carries base load, and a meter
+        // reading 0 A while reporting 410 V is a physically impossible pair that would
+        // make the whole dataset suspect. The floor also keeps the derived power_kw
+        // (sqrt(3) * V * I * pf) away from a bogus zero.
+        current_a: new Gauge({ base: randBetween(rand, 48, 95), noise: 7, diurnal: 18, min: 3, max: 400, precision: 2 }),
         power_factor: new Gauge({ base: randBetween(rand, 0.93, 0.975), noise: 0.012, min: 0, max: 1, precision: 3 }),
         frequency_hz: new Gauge({ base: 50, noise: 0.03, min: 45, max: 65, precision: 2 }),
         thd_pct: new Gauge({ base: randBetween(rand, 1.6, 3.2), noise: 0.4, min: 0, max: 40, precision: 2 }),
@@ -237,11 +241,16 @@ export function buildGenerators(typeCode, rand) {
     }
     case 'gw-edge200':
       return {
-        cpu_pct: new Gauge({ base: randBetween(rand, 14, 30), noise: 6, diurnal: 8, min: 0, max: 100, precision: 1 }),
-        mem_pct: new Gauge({ base: randBetween(rand, 38, 58), noise: 3, drift: 0.0008, reversion: 0.0008, min: 0, max: 100, precision: 1 }),
-        disk_pct: new Gauge({ base: randBetween(rand, 30, 58), noise: 0.4, drift: 0.0004, reversion: 0.0002, min: 0, max: 100, precision: 1 }),
-        temp_c: new Gauge({ base: randBetween(rand, 44, 54), noise: 1.4, diurnal: 4, min: -20, max: 105, precision: 1 }),
-        uplink_mbps: new Gauge({ base: randBetween(rand, 12, 40), noise: 8, diurnal: 14, min: 0, max: 1000, precision: 2 }),
+        // Noise is kept well below the base for every metric here. At a 5-second sample
+        // interval, real sensor noise is small and the visible variation comes from the
+        // walk and the diurnal term — noise large enough to clamp a gauge at its floor
+        // (a gateway reporting 0% CPU between two healthy samples) reads as obviously
+        // synthetic, and worse, it manufactures anomalies the AI is then asked to explain.
+        cpu_pct: new Gauge({ base: randBetween(rand, 16, 30), noise: 2.4, diurnal: 6, min: 0.5, max: 100, precision: 1 }),
+        mem_pct: new Gauge({ base: randBetween(rand, 38, 58), noise: 1.6, drift: 0.0008, reversion: 0.0008, min: 1, max: 100, precision: 1 }),
+        disk_pct: new Gauge({ base: randBetween(rand, 30, 58), noise: 0.3, drift: 0.0004, reversion: 0.0002, min: 1, max: 100, precision: 1 }),
+        temp_c: new Gauge({ base: randBetween(rand, 44, 54), noise: 1.1, diurnal: 4, min: -20, max: 105, precision: 1 }),
+        uplink_mbps: new Gauge({ base: randBetween(rand, 14, 40), noise: 3, diurnal: 8, min: 0.4, max: 1000, precision: 2 }),
         packet_loss_pct: new Gauge({ base: randBetween(rand, 0.02, 0.25), noise: 0.06, min: 0, max: 100, precision: 3 }),
         uptime_hours: new Counter({ start: randBetween(rand, 20, 4000), perSecond: 1 / 3600, precision: 2 }),
       };

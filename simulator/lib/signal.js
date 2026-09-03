@@ -142,8 +142,16 @@ export class ModeState {
  * usable window shrinks, which is exactly the failure mode a threshold alert misses.
  */
 export class Battery {
-  constructor({ dischargePctPerHour, chargePctPerHour, low = 22, full = 96 }) {
-    this.pct = 60 + Math.random() * 30;
+  /**
+   * `rand` is required, not optional. Seeding the starting charge from Math.random()
+   * would make every run begin with the fleet at a different state of charge, which
+   * defeats the reproducibility the whole simulator exists to provide.
+   */
+  constructor({ rand, dischargePctPerHour, chargePctPerHour, low = 22, full = 96 }) {
+    if (typeof rand !== 'function') {
+      throw new TypeError('Battery requires a seeded `rand` function for reproducibility');
+    }
+    this.pct = 45 + rand() * 45;
     this.dischargePctPerHour = dischargePctPerHour;
     this.chargePctPerHour = chargePctPerHour;
     this.low = low;

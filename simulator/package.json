@@ -1,0 +1,16 @@
+{
+  "name": "nerve-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Virtual industrial IoT fleet that streams reproducible telemetry into a Nerve/Xano backend, with injectable fault scenarios.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "backfill": "node index.js --backfill 24",
+    "dry": "node index.js --dry-run --once",
+    "scenarios": "node index.js --list-scenarios"
+  }
+}
