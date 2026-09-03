@@ -17,13 +17,18 @@ function "Nerve/fn_correlate" {
     }
 
     // Window floor for the candidate sweep.
+    //
+    // to_ms first: add_secs_to_timestamp takes EPOCHMS, not text, so piping the bare
+    // "now" literal into it is an "Invalid pipe" at runtime. Because this is the first
+    // statement in the function, that failed the whole sweep before a single group was
+    // examined - which is why triage errored identically with call_ai true and false.
     var $cutoff {
-      value = "now"|add_secs_to_timestamp:$lookback_negative
+      value = ("now"|to_ms)|add_secs_to_timestamp:$lookback_negative
     }
 
     // Candidates are alerts that are still firing and not yet owned by an incident. Anything already attached has been correlated.
     db.query alert {
-      where = $db.alert.state == "firing" && $db.alert.incident_id == null && $db.alert.fired_at >= $cutoff
+      where = $db.alert.state == "firing" && ($db.alert.incident_id == null || $db.alert.incident_id == 0) && $db.alert.fired_at >= $cutoff
       sort = {alert.fired_at: "asc"}
       return = {type: "list"}
     } as $alerts
@@ -66,7 +71,7 @@ function "Nerve/fn_correlate" {
               value = "site:" ~ ($device.site_id|to_text) ~ "|uplink:" ~ ($device.uplink_device_id|to_text)
             }
           }
-          elseif (($device_type|get:"category"|first_notempty:"other") == "gateway") {
+          elseif (((($device_type|first_notnull:{})|get:"category")|first_notempty:"other") == "gateway") {
             var.update $correlation_key {
               value = "site:" ~ ($device.site_id|to_text) ~ "|uplink:" ~ ($device.id|to_text)
             }
@@ -80,7 +85,7 @@ function "Nerve/fn_correlate" {
             device_id     : $device.id
             device_name   : $device.name
             device_type_id: $device.device_type_id
-            type_name     : $device_type|get:"name"|first_notempty:"unknown type"
+            type_name     : (($device_type|first_notnull:{})|get:"name")|first_notempty:"unknown type"
             site_id       : $device.site_id
             metric_key    : $alert.metric_key
             observed_value: $alert.observed_value
@@ -253,19 +258,33 @@ function "Nerve/fn_correlate" {
           value = $device_names|unique
         }
 
-        // Every member of a group shares a site by construction, so the first one is authoritative.
+        // Parsed out of the correlation key, which is the one place the site id is
+        // definitely present: the key is built as "site:<id>|..." from $device.site_id a
+        // few steps earlier, and the live rows prove it ("site:2|type:1|metric:...").
+        //
+        // Neither $candidate.site_id nor ($members|first)|get:"site_id" resolves - the
+        // key is absent from the enriched entry at runtime even though the object
+        // literal sets it - so every incident was stored with site_id 0 and titled "at
+        // unknown site". Reading it back out of the key sidesteps that entirely and uses
+        // only split/first/last/to_int, all of which are proven to work here.
         var $site_id {
-          value = ($members|first)|get:"site_id"
+          value = (((($group_key|split:"|")|first)|split:":")|last)|to_int
         }
 
-        db.get site {
-          field_name = "id"
-          field_value = $site_id
-        } as $site
+        // db.query rather than db.get: a query returns null when nothing matches, while
+        // db.get REJECTS a null/0 field_value outright with "Missing param: field_value".
+        // Done unconditionally, because the previous version wrapped a db.get in a
+        // conditional and the var.update did not survive the block - every incident
+        // title came out as "unknown site" even with a valid site_id.
+        db.query site {
+          where = $db.site.id == $site_id
+          return = {type: "single"}
+          output = ["id", "name", "code"]
+        } as $site_row
 
         // Titles are read in a list view, so the site name has to be in them.
         var $site_label {
-          value = $site|get:"name"|first_notempty:"unknown site"
+          value = (($site_row|first_notnull:{})|get:"name")|first_notempty:"unknown site"
         }
 
         // Metric list as prose.
@@ -275,12 +294,12 @@ function "Nerve/fn_correlate" {
 
         // Window covered by this group, used in the title-adjacent prompt context.
         var $span_start {
-          value = ($fired_ms|array_min)|format_timestamp:"Y-m-d H:i:s":"UTC"
+          value = ((($fired_ms|sort)|first)|to_int)|format_timestamp:"Y-m-d H:i:s":"UTC"
         }
 
         // Upper bound of the same window.
         var $span_end {
-          value = ($fired_ms|array_max)|format_timestamp:"Y-m-d H:i:s":"UTC"
+          value = ((($fired_ms|sort)|last)|to_int)|format_timestamp:"Y-m-d H:i:s":"UTC"
         }
 
         // What the operator sees before opening anything.
@@ -312,11 +331,11 @@ function "Nerve/fn_correlate" {
         conditional {
           if ($existing != null) {
             var.update $previous_alerts {
-              value = $existing|get:"alert_count"|first_notnull:0
+              value = (($existing|first_notnull:{})|get:"alert_count")|first_notnull:0
             }
 
             var.update $previous_devices {
-              value = $existing|get:"device_count"|first_notnull:0
+              value = (($existing|first_notnull:{})|get:"device_count")|first_notnull:0
             }
           }
         }
@@ -462,6 +481,29 @@ function "Nerve/fn_correlate" {
           value = null
         }
 
+        // WRITE THE DETERMINISTIC HYPOTHESIS NOW, before any model call.
+        //
+        // This used to live only inside the `if ($want_ai)` branch below, so whenever
+        // the model was not called - call_ai false, no API key, no credit - the fallback
+        // was computed and then thrown away, and the incident view rendered blank. That
+        // is precisely the dead end this function's own comment promises to avoid.
+        // Writing it up front means an incident ALWAYS carries a hypothesis, its
+        // evidence and a remediation list; a successful model reply simply overwrites
+        // these fields a few steps later.
+        db.edit incident {
+          field_name = "id"
+          field_value = $incident_id
+          data = {
+            ai_summary      : $ai_summary
+            ai_root_cause   : $ai_root_cause
+            ai_confidence   : $ai_confidence
+            ai_remediation  : $ai_remediation
+            ai_evidence     : $ai_evidence
+            ai_generated_at : "now"
+            ai_fallback_used: true
+          }
+        } as $deterministic_incident
+
         conditional {
           if ($want_ai) {
             // STRICT JSON is demanded because the reply is written into typed columns, not rendered as prose.
@@ -490,23 +532,23 @@ function "Nerve/fn_correlate" {
             conditional {
               if (($ai.fallback_used == false) && ($ai.json != null)) {
                 var.update $ai_summary {
-                  value = $ai.json|get:"summary"|first_notnull:$ai_summary
+                  value = ($ai.json|first_notnull:{})|get:"summary"|first_notnull:$ai_summary
                 }
 
                 var.update $ai_root_cause {
-                  value = $ai.json|get:"root_cause"|first_notnull:$ai_root_cause
+                  value = ($ai.json|first_notnull:{})|get:"root_cause"|first_notnull:$ai_root_cause
                 }
 
                 var.update $ai_confidence {
-                  value = ($ai.json|get:"confidence"|first_notnull:0.35)|to_decimal
+                  value = (($ai.json|first_notnull:{})|get:"confidence"|first_notnull:0.35)|to_decimal
                 }
 
                 var.update $ai_remediation {
-                  value = ($ai.json|get:"remediation"|first_notnull:$empty_list)|safe_array
+                  value = (($ai.json|first_notnull:{})|get:"remediation"|first_notnull:$empty_list)|safe_array
                 }
 
                 var.update $ai_evidence {
-                  value = ($ai.json|get:"evidence"|first_notnull:$evidence_lines)|safe_array
+                  value = (($ai.json|first_notnull:{})|get:"evidence"|first_notnull:$evidence_lines)|safe_array
                 }
 
                 var.update $ai_fallback_used {

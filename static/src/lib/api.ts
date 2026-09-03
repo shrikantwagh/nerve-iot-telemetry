@@ -664,21 +664,60 @@ export const rules = {
 /* Incidents                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Flatten the `GET /incidents/{id}` envelope into the flat `Incident` the screens expect.
+ *
+ * The endpoint returns `{ incident, site, assignee, alerts, devices, commands, ai: {
+ * summary, root_cause, confidence, remediation, evidence, model, fallback_used },
+ * timeline }` - verified live. The app's Incident type carries those as flat `ai_*`
+ * fields, so without this the entire AI panel renders empty even though the hypothesis,
+ * its confidence and its evidence are all sitting in the response.
+ */
+function normalizeIncidentDetail(wire: unknown): Incident {
+  if (!wire || typeof wire !== 'object') return {} as Incident
+  const w = wire as Record<string, unknown>
+
+  // Tolerate an already-flat response.
+  const inner = (w.incident && typeof w.incident === 'object' ? w.incident : w) as Partial<Incident>
+  const ai = (w.ai ?? {}) as Record<string, unknown>
+  const site = (w.site ?? undefined) as Site | undefined
+  const assignee = (w.assignee ?? undefined) as User | undefined
+
+  return {
+    ...(inner as Incident),
+    site_name: site?.name ?? (inner as Incident).site_name,
+    assignee_name: assignee?.name ?? (inner as Incident).assignee_name,
+    alerts: unwrapArray<Alert>(w.alerts ?? [], 'alerts'),
+    devices: unwrapArray<Device>(w.devices ?? [], 'devices'),
+    commands: unwrapArray<DeviceCommand>(w.commands ?? [], 'commands'),
+    ai_summary: (ai.summary ?? (inner as Incident).ai_summary ?? null) as string | null,
+    ai_root_cause: (ai.root_cause ?? (inner as Incident).ai_root_cause ?? null) as string | null,
+    ai_confidence: (ai.confidence ?? (inner as Incident).ai_confidence ?? null) as number | null,
+    ai_remediation: unwrapArray<string>(ai.remediation ?? []),
+    ai_evidence: unwrapArray<string>(ai.evidence ?? []),
+    ai_model: (ai.model ?? null) as string | null,
+    ai_generated_at: (ai.generated_at ?? null) as string | null,
+    ai_postmortem: (ai.postmortem ?? (inner as Incident).ai_postmortem ?? null) as string | null,
+    ai_fallback_used: Boolean(ai.fallback_used ?? (inner as Incident).ai_fallback_used),
+    has_ai_analysis: Boolean(ai.root_cause || ai.summary),
+  }
+}
+
 export const incidents = {
   list: (params: { state?: string; severity?: string; site_id?: number; page?: number } = {}, signal?: AbortSignal) =>
     request<unknown>('/incidents', { query: params, signal }).then((r) => unwrapList<Incident>(r, 'incidents')),
 
-  get: (id: number, signal?: AbortSignal) => request<Incident>(`/incidents/${id}`, { signal }),
+  get: (id: number, signal?: AbortSignal) =>
+    request<unknown>(`/incidents/${id}`, { signal }).then(normalizeIncidentDetail),
 
   update: (id: number, payload: Partial<Pick<Incident, 'state' | 'assigned_to' | 'title' | 'severity'>>) =>
     request<Incident>(`/incidents/${id}`, { method: 'PATCH', body: payload }),
 
   /** Regenerate the AI root-cause analysis. Long timeout: two model calls. */
   analyze: (id: number) =>
-    request<Incident & { fallback_used?: boolean; latency_ms?: number }>(`/incidents/${id}/analyze`, {
-      method: 'POST',
-      timeoutMs: 120_000,
-    }),
+    request<unknown>(`/incidents/${id}/analyze`, { method: 'POST', timeoutMs: 120_000 }).then(
+      (r) => normalizeIncidentDetail(r) as Incident & { fallback_used?: boolean; latency_ms?: number }
+    ),
 
   postmortem: (id: number) =>
     request<{ ai_postmortem: string; fallback_used?: boolean; model?: string }>(`/incidents/${id}/postmortem`, {

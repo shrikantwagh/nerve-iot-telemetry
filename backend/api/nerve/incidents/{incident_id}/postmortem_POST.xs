@@ -216,12 +216,12 @@ query "incidents/{incident_id}/postmortem" verb=POST {
     conditional {
       if ($alert_count > 0) {
         var.update $span_start {
-          value = ($fired_ms|array_min)|format_timestamp:"Y-m-d H:i:s":"UTC"
+          value = (($fired_ms|sort)|first)|format_timestamp:"Y-m-d H:i:s":"UTC"
         }
 
         // Measure to resolution when there is one, otherwise to now - an open incident's duration is still accruing.
         var.update $duration_minutes {
-          value = (((("now"|to_ms) - ($fired_ms|array_min)) / 60000))|round:1
+          value = (((("now"|to_ms) - (($fired_ms|sort)|first)) / 60000))|round:1
         }
       }
     }
@@ -234,7 +234,7 @@ query "incidents/{incident_id}/postmortem" verb=POST {
         }
 
         var.update $duration_minutes {
-          value = (((($incident.resolved_at|to_ms) - ($fired_ms|array_min)) / 60000))|round:1
+          value = (((($incident.resolved_at|to_ms) - (($fired_ms|sort)|first)) / 60000))|round:1
         }
       }
       elseif ($incident.resolved_at != null) {

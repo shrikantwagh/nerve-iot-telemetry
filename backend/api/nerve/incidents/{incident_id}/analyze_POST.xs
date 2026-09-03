@@ -256,7 +256,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
             }
 
             array.push $trend_lines {
-              value = ($trend_device|get:"name"|first_notempty:"device") ~ " " ~ $trend_metric ~ ": " ~ (($numeric_series|count)|to_text) ~ " x " ~ ((($ordered_buckets|first)|get:"bucket_seconds"|first_notnull:300)|to_text) ~ "s buckets oldest-to-newest [" ~ ($avg_series|join:", ") ~ "], min=" ~ ((($numeric_series|array_min)|round:2)|to_text) ~ ", max=" ~ ((($numeric_series|array_max)|round:2)|to_text) ~ ", net change=" ~ (($series_delta|round:2)|to_text)
+              value = ($trend_device|get:"name"|first_notempty:"device") ~ " " ~ $trend_metric ~ ": " ~ (($numeric_series|count)|to_text) ~ " x " ~ ((($ordered_buckets|first)|get:"bucket_seconds"|first_notnull:300)|to_text) ~ "s buckets oldest-to-newest [" ~ ($avg_series|join:", ") ~ "], min=" ~ (((($numeric_series|sort)|first)|round:2)|to_text) ~ ", max=" ~ (((($numeric_series|sort)|last)|round:2)|to_text) ~ ", net change=" ~ (($series_delta|round:2)|to_text)
             }
           }
           else {
@@ -281,11 +281,11 @@ query "incidents/{incident_id}/analyze" verb=POST {
     conditional {
       if ($alert_count > 0) {
         var.update $span_start {
-          value = ($fired_ms|array_min)|format_timestamp:"Y-m-d H:i:s":"UTC"
+          value = (($fired_ms|sort)|first)|format_timestamp:"Y-m-d H:i:s":"UTC"
         }
 
         var.update $span_end {
-          value = ($fired_ms|array_max)|format_timestamp:"Y-m-d H:i:s":"UTC"
+          value = (($fired_ms|sort)|last)|format_timestamp:"Y-m-d H:i:s":"UTC"
         }
       }
     }
@@ -298,7 +298,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
     conditional {
       if ($alert_count > 0) {
         var.update $duration_minutes {
-          value = (((("now"|to_ms) - ($fired_ms|array_min)) / 60000))|round:1
+          value = (((("now"|to_ms) - (($fired_ms|sort)|first)) / 60000))|round:1
         }
       }
     }

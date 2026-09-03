@@ -1,6 +1,6 @@
 // The rule engine, called once per ingested reading. Everything here exists to fire the *fewest* alerts that still describe reality - cooldowns and dedupe are the product, not a nicety.
 function "Nerve/fn_evaluate_rules" {
-  description = "Evaluates every enabled alert_rule whose scope matches this device against one reading, honouring per-rule cooldowns and firing-alert dedupe, and inserts alert rows for the rules that trip."
+  description = "Evaluates every enabled alert_rule whose scope matches this device against one reading, honouring per-rule-per-DEVICE cooldowns and firing-alert dedupe, and inserts alert rows for the rules that trip."
 
   input {
     // The reporting device.
@@ -26,9 +26,16 @@ function "Nerve/fn_evaluate_rules" {
   }
 
   stack {
-    // A scope column matches when it is null (wildcard) or equal to this device's value. All three scopes are ANDed, so a rule may pin any combination of device, type and site.
+    // A scope column matches when it is unscoped (wildcard) or equal to this device's value. All three scopes are ANDed, so a rule may pin any combination of device, type and site.
+    // SCOPE MATCHING: an unscoped rule field is 0, NOT null. Xano stores an unset
+    // optional int foreign key as 0 rather than null (confirmed live: every seeded rule
+    // came back with device_id 0 and site_id 0, and api_key did the same with site_id).
+    // So the obvious "field == null" wildcard test is false for 0 AND false for the real
+    // id, which matched NOTHING - the whole alerting engine silently never fired, and a
+    // fleet in trouble looked healthy. Both 0 and null are treated as unscoped so this is
+    // correct whichever the column holds; a real id is never 0, so nothing over-matches.
     db.query alert_rule {
-      where = $db.alert_rule.enabled == true && ($db.alert_rule.device_id == null || $db.alert_rule.device_id == $input.device_id) && ($db.alert_rule.device_type_id == null || $db.alert_rule.device_type_id == $input.device_type_id) && ($db.alert_rule.site_id == null || $db.alert_rule.site_id == $input.site_id)
+      where = $db.alert_rule.enabled == true && ($db.alert_rule.device_id == null || $db.alert_rule.device_id == 0 || $db.alert_rule.device_id == $input.device_id) && ($db.alert_rule.device_type_id == null || $db.alert_rule.device_type_id == 0 || $db.alert_rule.device_type_id == $input.device_type_id) && ($db.alert_rule.site_id == null || $db.alert_rule.site_id == 0 || $db.alert_rule.site_id == $input.site_id)
       return = {type: "list"}
     } as $rules
 
@@ -93,14 +100,36 @@ function "Nerve/fn_evaluate_rules" {
           }
         }
 
-        // Cooldown. Without this a rule that is genuinely firing mints one alert per reading and buries the operator - the precise alert-fatigue failure Nerve exists to fix.
+        // Cooldown, scoped PER (RULE, DEVICE) - not per rule.
+        //
+        // It was keyed on rule.last_fired_at, which is a single timestamp shared by
+        // every device the rule covers. One freezer tripping a fleet-wide rule therefore
+        // silenced every OTHER freezer for the whole cooldown window. Confirmed live:
+        // FREEZER-SGP-04-005 fired, and 006 and 008 - genuinely out of range at the same
+        // moment - returned alerts_fired 0.
+        //
+        // That is worse than a missed demo. It means the first device to fail hides all
+        // the others, so a site-wide fault reports as a single device, and correlation
+        // can never see more than one. The alert-fatigue defence has to suppress
+        // REPEATS of the same event on the same device, never a different device's
+        // first occurrence.
+        //
+        // rule.last_fired_at is still maintained, because "when did this rule last fire
+        // anywhere" is worth showing in the rules UI - it just must not gate firing.
+        db.query alert {
+          where = $db.alert.alert_rule_id == $rule.id && $db.alert.device_id == $input.device_id
+          sort = {alert.fired_at: "desc"}
+          return = {type: "single"}
+          output = ["id", "fired_at"]
+        } as $last_for_device
+
         var $cooldown_ok {
           value = true
         }
 
-        // A rule that has never fired has nothing to cool down from.
+        // Nothing to cool down from if this rule has never fired for THIS device.
         conditional {
-          if ($rule.last_fired_at != null) {
+          if ($last_for_device != null) {
             var $cooldown_ms {
               value = ($rule.cooldown_seconds|first_notnull:0) * 1000
             }
@@ -111,7 +140,7 @@ function "Nerve/fn_evaluate_rules" {
             }
 
             var.update $cooldown_ok {
-              value = ($rule.last_fired_at|to_ms) < $cutoff_ms
+              value = ($last_for_device.fired_at|to_ms) < $cutoff_ms
             }
           }
         }

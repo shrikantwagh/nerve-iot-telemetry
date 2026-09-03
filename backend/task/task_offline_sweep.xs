@@ -80,7 +80,7 @@ task task_offline_sweep {
 
             // An operator-authored offline rule supplies the severity and the cooldown. There may be several matching scopes; the first is taken rather than firing one alert per matching rule, because the device being unreachable is one event no matter how many rules describe it.
             db.query alert_rule {
-              where = $db.alert_rule.enabled == true && $db.alert_rule.condition == "offline" && ($db.alert_rule.device_id == null || $db.alert_rule.device_id == $device.id) && ($db.alert_rule.device_type_id == null || $db.alert_rule.device_type_id == $device.device_type_id) && ($db.alert_rule.site_id == null || $db.alert_rule.site_id == $device.site_id)
+              where = $db.alert_rule.enabled == true && $db.alert_rule.condition == "offline" && ($db.alert_rule.device_id == null || $db.alert_rule.device_id == 0 || $db.alert_rule.device_id == $device.id) && ($db.alert_rule.device_type_id == null || $db.alert_rule.device_type_id == 0 || $db.alert_rule.device_type_id == $device.device_type_id) && ($db.alert_rule.site_id == null || $db.alert_rule.site_id == 0 || $db.alert_rule.site_id == $device.site_id)
               return = {type: "single"}
             } as $rule
 

@@ -80,14 +80,64 @@ function "Nerve/fn_update_baseline" {
       value = $input.value - $prev_ewma
     }
 
-    // Standard incremental EWMA: ewma + alpha * delta.
-    var $ewma_new {
+    // Standard incremental EWMA: ewma + alpha * delta. Clamped for the same reason as
+    // the variance below - it is a decimal column, and a wild reading drags the mean
+    // with it.
+    var $ewma_raw {
       value = $prev_ewma + ($alpha * $delta)
     }
 
-    // Its matching EWMV: (1 - alpha) * (ewmv + alpha * delta^2). Kept exactly as the paired recurrence; changing either half breaks the z-score.
-    var $ewmv_new {
+    var $ewma_new {
+      value = $ewma_raw
+    }
+
+    conditional {
+      if ($ewma_raw > 1000000000) {
+        var.update $ewma_new {
+          value = 1000000000
+        }
+      }
+      elseif ($ewma_raw < -1000000000) {
+        var.update $ewma_new {
+          value = -1000000000
+        }
+      }
+    }
+
+    // Its matching EWMV: (1 - alpha) * (ewmv + alpha * delta^2). Kept exactly as the
+    // paired recurrence; changing either half breaks the z-score.
+    var $ewmv_raw {
       value = (1 - $alpha) * ($prev_ewmv + ($alpha * $delta * $delta))
+    }
+
+    // CLAMPED, because this term SQUARES the delta and the column is a decimal.
+    //
+    // One absurd reading is enough to overflow it: a device reporting 2e5 against a
+    // baseline near zero yields a variance around 4e10, which Postgres rejects with
+    // "22003 NUMERIC VALUE OUT OF RANGE" - and because this runs on the ingest hot
+    // path, that single bad sample would fail the whole batch and keep failing for
+    // that device on every subsequent write. A monitoring system must not be
+    // destroyed by the thing it is monitoring.
+    //
+    // The cap is far above any plausible real variance, so it never affects a healthy
+    // baseline; it only stops a garbage value from becoming a permanent outage. The
+    // z-score derived from a clamped variance is conservative (too small), which
+    // fails toward "no alert" rather than a storm of false ones.
+    var $ewmv_new {
+      value = $ewmv_raw
+    }
+
+    conditional {
+      if ($ewmv_raw > 1000000000) {
+        var.update $ewmv_new {
+          value = 1000000000
+        }
+      }
+      elseif ($ewmv_raw < 0) {
+        var.update $ewmv_new {
+          value = 0
+        }
+      }
     }
 
     // Sample count after this reading.

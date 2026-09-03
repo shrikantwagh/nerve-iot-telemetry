@@ -236,6 +236,13 @@ This applies to literal keys too, and it is not cosmetic: it produced `device_co
 null` on every site in `/fleet/overview`, and in `fn_claude` an
 `($raw|get:"content":[])` would have blanked every AI answer on a successful 200.
 
+**TRAP: `array_min` / `array_max` VALIDATE but throw "Invalid pipe" at runtime.**
+The validator checks that a filter exists, not that it runs. Proven by isolating each
+suspect chain in a probe endpoint: `format_timestamp` worked in all three documented
+forms, `array_min` on a literal array of integers did not. Use `(x|sort)|first` and
+`(x|sort)|last` instead. This class of bug - valid syntax, dead at runtime - is why the
+smoke test exists.
+
 **TRAP: the documented filter ALIASES are rejected by the language server.**
 `expressions/filters` lists alias names alongside every canonical one, but only the
 canonical name parses. Confirmed rejections so far:

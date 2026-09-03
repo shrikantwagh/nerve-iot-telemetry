@@ -272,11 +272,11 @@ query "ai/explain-anomaly" verb=POST {
     conditional {
       if ($n > 0) {
         var.update $v_min {
-          value = $values|array_min
+          value = ($values|sort)|first
         }
 
         var.update $v_max {
-          value = $values|array_max
+          value = ($values|sort)|last
         }
 
         var.update $v_avg {

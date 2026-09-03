@@ -299,6 +299,9 @@ export function sample(typeCode, gen, rand, tsMs, dtSeconds) {
     }
     case 'freezer-cc900': {
       const doorOpen = gen.door_open.next(rand, tsMs, dtSeconds);
+      // Accumulate while open, reset when it shuts. This is what "rolling seconds the
+      // door has been open" actually means.
+      gen.doorOpenElapsed = doorOpen ? (gen.doorOpenElapsed ?? 0) + dtSeconds : 0;
       const compressor = gen.compressor_on.next(rand, tsMs, dtSeconds);
       // An open door pushes cabinet temp up; the compressor pulls it down.
       gen.temp_c.offset += (doorOpen ? 0.16 : 0) - (compressor ? 0.05 : -0.03);
@@ -311,7 +314,11 @@ export function sample(typeCode, gen, rand, tsMs, dtSeconds) {
         evap_temp_c: gen.evap_temp_c.next(rand, tsMs) + (compressor ? -2.5 : 3),
         humidity_pct: gen.humidity_pct.next(rand, tsMs) + (doorOpen ? 14 : 0),
         power_w: Math.round(gen.power_w.next(rand, tsMs) * (compressor ? 1 : 0.18)),
-        door_open_seconds: doorOpen ? Math.round(gen.door_open.targetDwell(rand) - gen.door_open.remaining) : 0,
+        // Measured, not derived from targetDwell(): that call re-randomises on every
+        // invocation, so under the door-ajar scenario (dwell forced to 100000s) it
+        // produced values in the hundreds of thousands. Clamped to the schema's own
+        // hard_max so the generator can never emit a value the column cannot hold.
+        door_open_seconds: doorOpen ? Math.min(3600, Math.round(gen.doorOpenElapsed ?? 0)) : 0,
         compressor_on: compressor,
         door_open: doorOpen,
         defrost_cycles: gen.defrost_cycles.next(rand, tsMs, dtSeconds),

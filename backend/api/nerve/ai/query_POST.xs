@@ -1032,13 +1032,13 @@ query "ai/query" verb=POST {
 
               case ("min") {
                 var.update $agg_value {
-                  value = $values|array_min
+                  value = ($values|sort)|first
                 }
               } break
 
               case ("max") {
                 var.update $agg_value {
-                  value = $values|array_max
+                  value = ($values|sort)|last
                 }
               } break
 
@@ -1118,13 +1118,13 @@ query "ai/query" verb=POST {
 
               case ("min") {
                 var.update $g_value {
-                  value = $g_values|array_min
+                  value = ($g_values|sort)|first
                 }
               } break
 
               case ("max") {
                 var.update $g_value {
-                  value = $g_values|array_max
+                  value = ($g_values|sort)|last
                 }
               } break
 
