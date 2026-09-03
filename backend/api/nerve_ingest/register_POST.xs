@@ -24,7 +24,7 @@ query "register" verb=POST {
     // Caller-supplied labels. Only written on create; see the note in fn_resolve_device about not clobbering an operator's curated tags.
     json tags?
 
-    // Declared so a device that cannot set headers can still authenticate, and so the key shows up in the generated OpenAPI. mw_api_key_auth reads it as the last of three transports.
+    // Declared so a device that cannot set headers can still authenticate, and so the key shows up in the generated OpenAPI. Nerve/fn_api_key_auth reads it as the last of three transports.
     text api_key?
   }
 

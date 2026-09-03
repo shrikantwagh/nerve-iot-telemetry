@@ -22,9 +22,18 @@ function "Nerve/fn_api_key_auth" {
   }
 
   stack {
-    // Xano exposes request headers as a generated environment variable, not a bare
-    // magic variable - $env.$http_headers, confirmed against the language server's own
-    // CORS example. Getting this wrong reads as "no key presented" and 401s everything.
+    // VERIFIED AGAINST THE LIVE INSTANCE: this path does not work here.
+    //
+    // $env.$http_headers is the documented accessor (it appears in the language
+    // server's own CORS example), but on this Xano version a custom request header does
+    // not surface through it. Tested x-api-key, X-Api-Key, api-key and api_key against
+    // the deployed endpoint - all four returned 401, while the bearer-token and declared
+    // -input transports below both authenticated the same key successfully.
+    //
+    // The block is kept because it costs one comparison and may work on another Xano
+    // version, but nothing should DEPEND on it: Authorization: Bearer is the documented
+    // transport for Nerve, and it is built on $env.$request_auth_token, a first-class
+    // built-in rather than header introspection.
     var $headers {
       value = $env.$http_headers
     }
@@ -38,7 +47,7 @@ function "Nerve/fn_api_key_auth" {
     conditional {
       if ($headers|is_object) {
         var.update $raw_key {
-          value = (($headers|get:"x-api-key":"")|to_text)|trim
+          value = (($headers|get:"x-api-key"|first_notempty:"")|to_text)|trim
         }
       }
     }
@@ -47,7 +56,7 @@ function "Nerve/fn_api_key_auth" {
     conditional {
       if (($raw_key == "") && ($headers|is_object)) {
         var.update $raw_key {
-          value = (($headers|get:"X-API-Key":"")|to_text)|trim
+          value = (($headers|get:"X-API-Key"|first_notempty:"")|to_text)|trim
         }
       }
     }
@@ -98,11 +107,15 @@ function "Nerve/fn_api_key_auth" {
       }
     }
 
-    // CONVENTION: key_prefix is the first 12 characters of the plaintext (format
-    // nrv_<8 hex>_<secret>). This indexed lookup keeps auth to one bcrypt check rather
-    // than one per stored key.
+    // CONVENTION, and it must match api-keys_POST exactly or the indexed lookup misses
+    // every time and every request degrades into the full-table bcrypt scan below.
+    // The minting endpoint stores `$secret|substr:0:8` - the first 8 characters of the
+    // secret, NOT of the plaintext - and the plaintext is "nrv_" ~ $secret. So the same
+    // handle is recovered from the presented key by skipping the 4-character "nrv_"
+    // marker and taking 8 characters (substr is start:length). table/api_key.xs says
+    // "First 8 chars", which is the authority here.
     var $prefix {
-      value = $raw_key|substr:0:12
+      value = $raw_key|substr:4:8
     }
 
     // Run unconditionally: an empty prefix matches nothing, and branching around it
@@ -178,7 +191,7 @@ function "Nerve/fn_api_key_auth" {
     // - so the response is not an oracle for probing keys.
     precondition ($key != null) {
       error_type = "unauthorized"
-      error = "Invalid or disabled device API key. Present it as the x-api-key header, as an Authorization bearer token, or as the api_key input."
+      error = "Invalid or disabled device API key. Present it as an Authorization: Bearer header (recommended) or as the api_key request field."
     }
 
     // Usage accounting doubles as the "is this device still talking to us" signal in the

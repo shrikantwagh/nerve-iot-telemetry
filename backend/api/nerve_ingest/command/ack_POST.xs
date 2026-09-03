@@ -15,7 +15,7 @@ query "command/ack" verb=POST {
     // Optional device-supplied note, kept separate from result so a human-readable reason survives even when result is machine junk.
     text note?
 
-    // Declared so a device that cannot set headers can still authenticate; mw_api_key_auth reads it as the last of three transports.
+    // Declared so a device that cannot set headers can still authenticate; Nerve/fn_api_key_auth reads it as the last of three transports.
     text api_key?
   }
 

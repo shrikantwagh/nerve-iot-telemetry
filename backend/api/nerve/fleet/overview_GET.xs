@@ -8,8 +8,11 @@ query "fleet/overview" verb=GET {
 
   stack {
     // One clock for the whole response. Tiles computed against different "now"s disagree by a second and look like a bug.
+    // to_ms, not the bare literal. "now" is only interpreted as a timestamp inside a
+    // db `data = {}` block; returned directly in a response it serialises as the literal
+    // three-character string "now", which is what the live endpoint was emitting.
     var $now {
-      value = "now"
+      value = "now"|to_ms
     }
 
     // Ingest-rate tile window.
@@ -58,7 +61,7 @@ query "fleet/overview" verb=GET {
 
         // Read-modify-write into the map. Hoisted into a var because a filter chain inside a filter argument binds greedily.
         var $next_site_count {
-          value = ($site_device_counts|get:$skey:0) + 1
+          value = ($site_device_counts|get:$skey|first_notnull:0) + 1
         }
 
         var.update $site_device_counts {
@@ -71,7 +74,7 @@ query "fleet/overview" verb=GET {
         }
 
         var $next_site_health {
-          value = ($site_health_sums|get:$skey:0) + $device_health
+          value = ($site_health_sums|get:$skey|first_notnull:0) + $device_health
         }
 
         var.update $site_health_sums {
@@ -97,7 +100,7 @@ query "fleet/overview" verb=GET {
 
         // status is an enum, so it is already text and can index the map directly.
         var $next_status_count {
-          value = ($status_counts|get:$device.status:0) + 1
+          value = ($status_counts|get:$device.status|first_notnull:0) + 1
         }
 
         var.update $status_counts {
@@ -168,7 +171,7 @@ query "fleet/overview" verb=GET {
     foreach ($open_incidents) {
       each as $incident {
         var $next_sev_count {
-          value = ($incidents_by_severity|get:$incident.severity:0) + 1
+          value = ($incidents_by_severity|get:$incident.severity|first_notnull:0) + 1
         }
 
         var.update $incidents_by_severity {
@@ -183,7 +186,7 @@ query "fleet/overview" verb=GET {
             }
 
             var $next_site_incidents {
-              value = ($site_incident_counts|get:$inc_site_key:0) + 1
+              value = ($site_incident_counts|get:$inc_site_key|first_notnull:0) + 1
             }
 
             var.update $site_incident_counts {
@@ -228,15 +231,15 @@ query "fleet/overview" verb=GET {
         }
 
         var $site_devices {
-          value = $site_device_counts|get:$sid:0
+          value = $site_device_counts|get:$sid|first_notnull:0
         }
 
         var $site_health {
-          value = $site_health_sums|get:$sid:0
+          value = $site_health_sums|get:$sid|first_notnull:0
         }
 
         var $site_incidents {
-          value = $site_incident_counts|get:$sid:0
+          value = $site_incident_counts|get:$sid|first_notnull:0
         }
 
         // A site with no devices yet reports 0 rather than being omitted - an empty site is a real operational state during rollout.

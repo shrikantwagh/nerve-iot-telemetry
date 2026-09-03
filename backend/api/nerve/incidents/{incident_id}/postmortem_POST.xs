@@ -51,7 +51,7 @@ query "incidents/{incident_id}/postmortem" verb=POST {
 
     // Shared by the prompt and by the deterministic draft, so the two never disagree on the location.
     var $site_label {
-      value = $site|get:"name":"unknown site"
+      value = $site|get:"name"|first_notempty:"unknown site"
     }
 
     // Assignee is named in the writeup because a postmortem with no owner is a document nobody follows up.
@@ -125,14 +125,14 @@ query "incidents/{incident_id}/postmortem" verb=POST {
 
         // Absolute UTC times, not relative ones: a postmortem is read weeks later.
         array.push $timeline_lines {
-          value = ($alert.fired_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC - " ~ ($alert.severity|first_notempty:"warning") ~ " alert on " ~ ($device|get:"name":"device") ~ " (" ~ ($device_type|get:"name":"unknown type") ~ "): " ~ ($alert.metric_key|first_notempty:"metric") ~ "=" ~ (($alert.observed_value|first_notnull:0)|to_text) ~ " vs threshold " ~ (($alert.threshold|first_notnull:0)|to_text) ~ ", z=" ~ (($alert.z_score|first_notnull:0)|to_text)
+          value = ($alert.fired_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC - " ~ ($alert.severity|first_notempty:"warning") ~ " alert on " ~ ($device|get:"name"|first_notempty:"device") ~ " (" ~ ($device_type|get:"name"|first_notempty:"unknown type") ~ "): " ~ ($alert.metric_key|first_notempty:"metric") ~ "=" ~ (($alert.observed_value|first_notnull:0)|to_text) ~ " vs threshold " ~ (($alert.threshold|first_notnull:0)|to_text) ~ ", z=" ~ (($alert.z_score|first_notnull:0)|to_text)
         }
 
         // Recovery time is what makes a duration measurable per device rather than only per incident.
         conditional {
           if ($alert.resolved_at != null) {
             array.push $timeline_lines {
-              value = ($alert.resolved_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC - alert on " ~ ($device|get:"name":"device") ~ " for " ~ ($alert.metric_key|first_notempty:"metric") ~ " resolved"
+              value = ($alert.resolved_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC - alert on " ~ ($device|get:"name"|first_notempty:"device") ~ " for " ~ ($alert.metric_key|first_notempty:"metric") ~ " resolved"
             }
           }
           else {
@@ -149,7 +149,7 @@ query "incidents/{incident_id}/postmortem" verb=POST {
             }
 
             array.push $device_lines {
-              value = ($device|get:"name":"device") ~ " [" ~ ($device|get:"serial":"unknown serial") ~ "] " ~ ($device_type|get:"name":"unknown type") ~ "/" ~ ($device_type|get:"category":"other") ~ " at " ~ ($device|get:"location_label":"unspecified location") ~ ", current status " ~ ($device|get:"status":"unknown") ~ ", health " ~ (($device|get:"health_score":0)|to_text)
+              value = ($device|get:"name"|first_notempty:"device") ~ " [" ~ ($device|get:"serial"|first_notempty:"unknown serial") ~ "] " ~ ($device_type|get:"name"|first_notempty:"unknown type") ~ "/" ~ ($device_type|get:"category"|first_notempty:"other") ~ " at " ~ ($device|get:"location_label"|first_notempty:"unspecified location") ~ ", current status " ~ ($device|get:"status"|first_notempty:"unknown") ~ ", health " ~ (($device|get:"health_score"|first_notnull:0)|to_text)
             }
           }
         }
@@ -183,7 +183,7 @@ query "incidents/{incident_id}/postmortem" verb=POST {
         } as $issuer
 
         array.push $action_lines {
-          value = ($command.created_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC - " ~ ($issuer|get:"name":"an operator") ~ " issued " ~ $command.command ~ " to " ~ ($command_device|get:"name":"device") ~ " (state " ~ ($command.state|first_notempty:"queued") ~ ")"
+          value = ($command.created_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC - " ~ ($issuer|get:"name"|first_notempty:"an operator") ~ " issued " ~ $command.command ~ " to " ~ ($command_device|get:"name"|first_notempty:"device") ~ " (state " ~ ($command.state|first_notempty:"queued") ~ ")"
         }
       }
     }
@@ -246,7 +246,7 @@ query "incidents/{incident_id}/postmortem" verb=POST {
 
     // DETERMINISTIC DRAFT FIRST. A postmortem assembled from the log is worth having even with no model available; it is exactly the sections a human would otherwise transcribe by hand.
     var $postmortem {
-      value = "# Postmortem: " ~ $incident.title ~ "\n\n**Site:** " ~ $site_label ~ "  \n**Severity:** " ~ ($incident.severity|first_notempty:"warning") ~ "  \n**State:** " ~ ($incident.state|first_notempty:"open") ~ "  \n**Owner:** " ~ ($assignee|get:"name":"unassigned") ~ "  \n**Window:** " ~ $span_start ~ " UTC to " ~ $span_end ~ " (" ~ ($duration_minutes|to_text) ~ " minutes)\n\n## What happened\n" ~ ($incident.ai_summary|first_notempty:"Correlated alerts were grouped into this incident by the alert-correlation sweep.") ~ "\n\n## Impact\n" ~ ($device_count|to_text) ~ " device(s) affected across " ~ ($alert_count|to_text) ~ " alert(s) on " ~ $metric_label ~ " over " ~ ($duration_minutes|to_text) ~ " minutes. " ~ ($still_firing|to_text) ~ " alert(s) had not recovered at the time of writing.\n\n### Devices\n- " ~ ($device_lines|join:"\n- ") ~ "\n\n## Timeline\n- " ~ ($timeline_lines|join:"\n- ") ~ "\n\n## Root cause\n" ~ ($incident.ai_root_cause|first_notempty:"Not yet determined. Run the analysis endpoint or investigate the shared attribute named in the correlation reason.") ~ "\n\n## What was done\n- " ~ (($action_lines|join:"\n- ")|first_notempty:"No remediation commands were issued from this incident.") ~ "\n\n## Prevention\n- Review whether an alert rule with a learned baseline would have caught this earlier than a static threshold.\n- Check whether the shared attribute in the correlation key (" ~ ($incident.correlation_key|first_notempty:"none") ~ ") is monitored in its own right.\n- Confirm the affected device class has a current firmware baseline.\n\n_Draft assembled from the incident log without model assistance._"
+      value = "# Postmortem: " ~ $incident.title ~ "\n\n**Site:** " ~ $site_label ~ "  \n**Severity:** " ~ ($incident.severity|first_notempty:"warning") ~ "  \n**State:** " ~ ($incident.state|first_notempty:"open") ~ "  \n**Owner:** " ~ ($assignee|get:"name"|first_notempty:"unassigned") ~ "  \n**Window:** " ~ $span_start ~ " UTC to " ~ $span_end ~ " (" ~ ($duration_minutes|to_text) ~ " minutes)\n\n## What happened\n" ~ ($incident.ai_summary|first_notempty:"Correlated alerts were grouped into this incident by the alert-correlation sweep.") ~ "\n\n## Impact\n" ~ ($device_count|to_text) ~ " device(s) affected across " ~ ($alert_count|to_text) ~ " alert(s) on " ~ $metric_label ~ " over " ~ ($duration_minutes|to_text) ~ " minutes. " ~ ($still_firing|to_text) ~ " alert(s) had not recovered at the time of writing.\n\n### Devices\n- " ~ ($device_lines|join:"\n- ") ~ "\n\n## Timeline\n- " ~ ($timeline_lines|join:"\n- ") ~ "\n\n## Root cause\n" ~ ($incident.ai_root_cause|first_notempty:"Not yet determined. Run the analysis endpoint or investigate the shared attribute named in the correlation reason.") ~ "\n\n## What was done\n- " ~ (($action_lines|join:"\n- ")|first_notempty:"No remediation commands were issued from this incident.") ~ "\n\n## Prevention\n- Review whether an alert rule with a learned baseline would have caught this earlier than a static threshold.\n- Check whether the shared attribute in the correlation key (" ~ ($incident.correlation_key|first_notempty:"none") ~ ") is monitored in its own right.\n- Confirm the affected device class has a current firmware baseline.\n\n_Draft assembled from the incident log without model assistance._"
     }
 
     // Assume fallback until a model reply proves otherwise.
@@ -279,7 +279,7 @@ query "incidents/{incident_id}/postmortem" verb=POST {
 
         // Everything the draft needs and nothing derived: the model gets the log, not our interpretation of it.
         var $user_prompt {
-          value = "INCIDENT RECORD\nTitle: " ~ $incident.title ~ "\nSite: " ~ $site_label ~ " (region " ~ ($site|get:"region":"unknown") ~ ", timezone " ~ ($site|get:"timezone":"UTC") ~ ")\nSeverity: " ~ ($incident.severity|first_notempty:"warning") ~ "\nState: " ~ ($incident.state|first_notempty:"open") ~ "\nOwner: " ~ ($assignee|get:"name":"unassigned") ~ "\nOpened (UTC): " ~ ($incident.opened_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ "\nFirst alert (UTC): " ~ $span_start ~ "\nClosed (UTC): " ~ $span_end ~ "\nDuration (minutes): " ~ ($duration_minutes|to_text) ~ "\nAlerts: " ~ ($alert_count|to_text) ~ " total, " ~ ($still_firing|to_text) ~ " never recovered\nDistinct devices affected: " ~ ($device_count|to_text) ~ "\nMetrics involved: " ~ $metric_label ~ "\nWhy these alerts were grouped: " ~ ($incident.correlation_reason|first_notempty:"not recorded") ~ "\nExisting AI summary: " ~ ($incident.ai_summary|first_notempty:"none recorded") ~ "\nExisting AI root-cause hypothesis: " ~ ($incident.ai_root_cause|first_notempty:"none recorded") ~ "\nHypothesis confidence: " ~ (($incident.ai_confidence|first_notnull:0)|to_text) ~ "\n\nAFFECTED DEVICES\n- " ~ ($device_lines|join:"\n- ") ~ "\n\nEVENT TIMELINE\n- " ~ ($timeline_lines|join:"\n- ") ~ "\n\nREMEDIATION ACTIONS TAKEN\n- " ~ (($action_lines|join:"\n- ")|first_notempty:"none recorded") ~ "\n\nRECORDED REMEDIATION ADVICE (may or may not have been followed)\n" ~ ((($incident.ai_remediation|safe_array)|join:"; ")|first_notempty:"none recorded")
+          value = "INCIDENT RECORD\nTitle: " ~ $incident.title ~ "\nSite: " ~ $site_label ~ " (region " ~ ($site|get:"region"|first_notempty:"unknown") ~ ", timezone " ~ ($site|get:"timezone"|first_notempty:"UTC") ~ ")\nSeverity: " ~ ($incident.severity|first_notempty:"warning") ~ "\nState: " ~ ($incident.state|first_notempty:"open") ~ "\nOwner: " ~ ($assignee|get:"name"|first_notempty:"unassigned") ~ "\nOpened (UTC): " ~ ($incident.opened_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ "\nFirst alert (UTC): " ~ $span_start ~ "\nClosed (UTC): " ~ $span_end ~ "\nDuration (minutes): " ~ ($duration_minutes|to_text) ~ "\nAlerts: " ~ ($alert_count|to_text) ~ " total, " ~ ($still_firing|to_text) ~ " never recovered\nDistinct devices affected: " ~ ($device_count|to_text) ~ "\nMetrics involved: " ~ $metric_label ~ "\nWhy these alerts were grouped: " ~ ($incident.correlation_reason|first_notempty:"not recorded") ~ "\nExisting AI summary: " ~ ($incident.ai_summary|first_notempty:"none recorded") ~ "\nExisting AI root-cause hypothesis: " ~ ($incident.ai_root_cause|first_notempty:"none recorded") ~ "\nHypothesis confidence: " ~ (($incident.ai_confidence|first_notnull:0)|to_text) ~ "\n\nAFFECTED DEVICES\n- " ~ ($device_lines|join:"\n- ") ~ "\n\nEVENT TIMELINE\n- " ~ ($timeline_lines|join:"\n- ") ~ "\n\nREMEDIATION ACTIONS TAKEN\n- " ~ (($action_lines|join:"\n- ")|first_notempty:"none recorded") ~ "\n\nRECORDED REMEDIATION ADVICE (may or may not have been followed)\n" ~ ((($incident.ai_remediation|safe_array)|join:"; ")|first_notempty:"none recorded")
         }
 
         function.run "Nerve/fn_claude" {

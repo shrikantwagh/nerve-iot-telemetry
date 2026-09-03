@@ -33,7 +33,7 @@ query "ai/triage" verb=POST {
 
     // An unrecognised role scores 0 and is therefore denied - failing closed is the only safe default here.
     var $role_rank {
-      value = $role_levels|get:$user.role:0
+      value = $role_levels|get:$user.role|first_notnull:0
     }
 
     // Triage writes incident rows and links alerts to them; that is an operator action, not a viewer one.

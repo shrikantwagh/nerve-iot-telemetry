@@ -88,13 +88,13 @@ query "ai/explain-anomaly" verb=POST {
 
     // Hoisted so foreach iterates a plain variable; safe_array so a type with no schema does not break the loop.
     var $schema {
-      value = ($device_type|get:"metric_schema":[])|safe_array
+      value = ($device_type|get:"metric_schema"|safe_array)|safe_array
     }
 
     foreach ($schema) {
       each as $metric {
         var $mkey {
-          value = ($metric|get:"key":"")|to_text
+          value = ($metric|get:"key"|first_notempty:"")|to_text
         }
 
         array.push $known_keys {
@@ -129,12 +129,12 @@ query "ai/explain-anomaly" verb=POST {
 
     // Unit and label are prompt material only - they let the model say "3 degrees above" instead of "3 above".
     var $unit {
-      value = ($metric_def|get:"unit":"")|to_text
+      value = ($metric_def|get:"unit"|first_notempty:"")|to_text
     }
 
     // Human label for the metric, falling back to the key itself.
     var $label {
-      value = ($metric_def|get:"label":$input.metric_key)|to_text
+      value = ($metric_def|get:"label"|first_notnull:$input.metric_key)|to_text
     }
 
     // Negated first, because add_secs_to_timestamp takes an int and the negation cannot be written inline in the filter argument.
@@ -421,7 +421,7 @@ query "ai/explain-anomaly" verb=POST {
 
     // Readings folded into the baseline. Under about 20 the z-score is not yet meaningful, which the prompt is told explicitly.
     var $baseline_samples {
-      value = ($baseline|get:"sample_count":0)|to_int
+      value = ($baseline|get:"sample_count"|first_notnull:0)|to_int
     }
 
     // Sigma, computed only when the variance is positive - sqrt of 0 is a divide-by-zero waiting to happen one line later.
@@ -558,7 +558,7 @@ query "ai/explain-anomaly" verb=POST {
 
     // Context lines the model needs but that are not part of the numeric summary.
     var $device_line {
-      value = ($device.name|to_text) ~ " [" ~ ($device.serial|to_text) ~ "], type " ~ (($device_type|get:"name":"unknown")|to_text) ~ " (category " ~ (($device_type|get:"category":"other")|to_text) ~ "), site " ~ (($site|get:"name":"unknown")|to_text) ~ ", status " ~ ($device.status|to_text) ~ ", health " ~ (($device.health_score|first_notnull:0)|to_text)
+      value = ($device.name|to_text) ~ " [" ~ ($device.serial|to_text) ~ "], type " ~ (($device_type|get:"name"|first_notempty:"unknown")|to_text) ~ " (category " ~ (($device_type|get:"category"|first_notempty:"other")|to_text) ~ "), site " ~ (($site|get:"name"|first_notempty:"unknown")|to_text) ~ ", status " ~ ($device.status|to_text) ~ ", health " ~ (($device.health_score|first_notnull:0)|to_text)
     }
 
     // DETERMINISTIC EXPLANATION, written before the inference is attempted. It is what ships with no API key or on a 429, and it says only what the arithmetic supports.
@@ -660,28 +660,28 @@ query "ai/explain-anomaly" verb=POST {
     conditional {
       if (($ai.fallback_used == false) && ($ai.json != null)) {
         var.update $explanation {
-          value = $ai.json|get:"explanation":$explanation
+          value = $ai.json|get:"explanation"|first_notnull:$explanation
         }
 
         // The model may correct the classifier; the classifier's own answer stays in series_summary.detected_shape so the two can be compared.
         var.update $shape {
-          value = ($ai.json|get:"shape":$shape)|to_text
+          value = ($ai.json|get:"shape"|first_notnull:$shape)|to_text
         }
 
         var.update $verdict {
-          value = ($ai.json|get:"verdict":$verdict)|to_text
+          value = ($ai.json|get:"verdict"|first_notnull:$verdict)|to_text
         }
 
         var.update $confidence {
-          value = ($ai.json|get:"confidence":0.35)|to_decimal
+          value = ($ai.json|get:"confidence"|first_notnull:0.35)|to_decimal
         }
 
         var.update $checks {
-          value = ($ai.json|get:"checks":$checks)|safe_array
+          value = ($ai.json|get:"checks"|first_notnull:$checks)|safe_array
         }
 
         var.update $likely_causes {
-          value = ($ai.json|get:"likely_causes":[])|safe_array
+          value = ($ai.json|get:"likely_causes"|safe_array)|safe_array
         }
 
         var.update $fallback_used {
@@ -698,7 +698,7 @@ query "ai/explain-anomaly" verb=POST {
     conditional {
       if (($ai.fallback_used == false) && ($ai.json != null)) {
         var.update $evidence {
-          value = ($ai.json|get:"evidence":$evidence)|safe_array
+          value = ($ai.json|get:"evidence"|first_notnull:$evidence)|safe_array
         }
       }
     }

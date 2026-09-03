@@ -173,8 +173,8 @@ query "incidents/{incident_id}/commands" verb=POST {
           value = {
             id         : $command_row.id
             device_id  : $device_id
-            device_name: $device|get:"name":null
-            serial     : $device|get:"serial":null
+            device_name: $device|get:"name"
+            serial     : $device|get:"serial"
             command    : $input.command
             state      : "queued"
             created_at : $command_row.created_at

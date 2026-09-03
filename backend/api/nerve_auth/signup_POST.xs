@@ -1,4 +1,4 @@
-// Create an account and hand back a usable session in one call. The first account on a fresh workspace becomes admin, so a cold install is never locked out of its own admin surface.
+// Create an account and hand back a usable session in one call. If the workspace has no administrator yet, this account becomes one, so a cold install is never locked out of its own admin surface.
 query "signup" verb=POST {
   api_group = "NerveAuth"
 
@@ -27,19 +27,32 @@ query "signup" verb=POST {
       error = "An account with this email already exists."
     }
 
-    // Bootstrap check: on an empty user table the very first signup has to become admin, or nobody can ever reach /api-keys or /admin/seed.
+    // Bootstrap check: gates on "does an ADMIN exist", not "is the user table empty".
+    //
+    // Counting all users was wrong and locked the workspace out of its own admin
+    // surface. POST /auth/demo provisions the shared demo account on first use, and
+    // that is the PRIMARY action on the login screen - so on any real workspace the
+    // demo row is created before anyone signs up. It then occupied the "first user"
+    // slot, every subsequent signup fell through to viewer, and /admin/seed,
+    // /api-keys and /audit-log became permanently unreachable. Confirmed live: the
+    // demo account landed as user 1 and the next signup came back a viewer.
+    //
+    // Gating on the absence of an admin is both bootstrap-safe and self-healing: the
+    // promotion window is exactly "this workspace has no administrator", which is the
+    // only situation in which auto-promotion is the right answer. Once one exists,
+    // nobody is promoted again.
     db.query user {
+      where = $db.user.role == "admin" && $db.user.demo_account == false
       return = {type: "count"}
-    } as $user_count
+    } as $admin_count
 
     // Default for everyone after the first. Least privilege: a new account can read the fleet, not command it.
     var $role {
       value = "viewer"
     }
 
-    // The bootstrap promotion. Deliberately count-based rather than a config flag, so it cannot be re-triggered once anyone exists.
     conditional {
-      if ($user_count == 0) {
+      if ($admin_count == 0) {
         var.update $role {
           value = "admin"
         }

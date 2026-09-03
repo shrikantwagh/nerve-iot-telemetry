@@ -203,6 +203,29 @@ security.create_uuid as $uuid
 
 ## 5. Expressions & filters
 
+**TRAP: `|get:` silently returns null when you pass it a default.**
+
+Proven against the live instance, not inferred:
+
+| Form | Result |
+|---|---|
+| `$map\|get:$key` | works - resolves the value |
+| `$map\|get:$key:0` | **null**, even when the key exists and holds 2 |
+
+So the third argument does not act as a default; supplying it breaks the lookup. Always
+chain the default as its own filter instead:
+
+```xs
+($map|get:$key)|first_notnull:0      // numeric / boolean default
+($map|get:$key)|safe_array           // [] default
+($map|get:$key)|first_notempty:"x"   // string default
+$map|get:$key                        // null default - just omit it
+```
+
+This applies to literal keys too, and it is not cosmetic: it produced `device_count:
+null` on every site in `/fleet/overview`, and in `fn_claude` an
+`($raw|get:"content":[])` would have blanked every AI answer on a successful 200.
+
 **TRAP: the documented filter ALIASES are rejected by the language server.**
 `expressions/filters` lists alias names alongside every canonical one, but only the
 canonical name parses. Confirmed rejections so far:

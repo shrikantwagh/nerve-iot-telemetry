@@ -27,9 +27,10 @@ query "devices/{device_id}/commands" verb=GET {
     }
 
     // Left join on user: issued_by is null for commands raised by a task rather than a person, and an inner join would hide exactly those.
+    // The join key is `user`, not a descriptive alias like `issuer`, because `eval` below addresses the joined table as $db.user.name - the alias IS the reference, so a prettier name would simply not resolve. Same convention as alerts_GET / alert_rules_GET.
     db.query device_command {
       join = {
-        issuer: {table: "user", type: "left", where: $db.device_command.issued_by == $db.user.id}
+        user: {table: "user", type: "left", where: $db.device_command.issued_by == $db.user.id}
       }
       eval = {
         issued_by_name: $db.user.name

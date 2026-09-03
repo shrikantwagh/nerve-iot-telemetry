@@ -97,14 +97,14 @@ query "incidents" verb=GET {
             severity          : $incident.severity
             state             : $incident.state
             site_id           : $incident.site_id
-            site_name         : $site|get:"name":null
+            site_name         : $site|get:"name"
             device_count      : $incident.device_count
             alert_count       : $incident.alert_count
             opened_at         : $incident.opened_at
             resolved_at       : $incident.resolved_at
             age_seconds       : $age_seconds
             assigned_to       : $incident.assigned_to
-            assignee_name     : $assignee|get:"name":null
+            assignee_name     : $assignee|get:"name"
             ai_summary        : $incident.ai_summary
             ai_confidence     : $incident.ai_confidence
             ai_fallback_used  : $incident.ai_fallback_used
@@ -118,11 +118,11 @@ query "incidents" verb=GET {
 
   response = {
     items       : $rows
-    page        : $page|get:"curPage":1
+    page        : $page|get:"curPage"|first_notnull:1
     per_page    : $input.per_page
-    next_page   : $page|get:"nextPage":null
-    items_total : $page|get:"itemsTotal":0
-    page_total  : $page|get:"pageTotal":0
+    next_page   : $page|get:"nextPage"
+    items_total : $page|get:"itemsTotal"|first_notnull:0
+    page_total  : $page|get:"pageTotal"|first_notnull:0
     default_view: $exclude_state == "resolved"
   }
   tags = ["nerve"]

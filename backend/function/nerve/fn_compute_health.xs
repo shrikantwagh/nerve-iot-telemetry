@@ -80,7 +80,7 @@ function "Nerve/fn_compute_health" {
 
     // Fall back to the schema default when the type omits it, so a half-configured type cannot make every device look offline.
     var $offline_after {
-      value = $device_type|get:"offline_after_seconds":300
+      value = $device_type|get:"offline_after_seconds"|first_notnull:300
     }
 
     // A device that never checked in is treated as maximally stale rather than as healthy.

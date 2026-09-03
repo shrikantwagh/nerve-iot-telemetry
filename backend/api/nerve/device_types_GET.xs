@@ -34,7 +34,7 @@ query "device-types" verb=GET {
         }
 
         var $next_count {
-          value = ($type_counts|get:$tkey:0) + 1
+          value = ($type_counts|get:$tkey|first_notnull:0) + 1
         }
 
         var.update $type_counts {
@@ -46,7 +46,7 @@ query "device-types" verb=GET {
         }
 
         var $next_health {
-          value = ($type_health|get:$tkey:0) + $health
+          value = ($type_health|get:$tkey|first_notnull:0) + $health
         }
 
         var.update $type_health {
@@ -66,11 +66,11 @@ query "device-types" verb=GET {
         }
 
         var $count {
-          value = $type_counts|get:$tid:0
+          value = $type_counts|get:$tid|first_notnull:0
         }
 
         var $health_sum {
-          value = $type_health|get:$tid:0
+          value = $type_health|get:$tid|first_notnull:0
         }
 
         var $avg_health {

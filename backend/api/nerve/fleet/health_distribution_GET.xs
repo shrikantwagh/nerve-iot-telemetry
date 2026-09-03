@@ -87,7 +87,7 @@ query "fleet/health-distribution" verb=GET {
         }
 
         var $next_bucket {
-          value = ($bucket_counts|get:$bucket_key:0) + 1
+          value = ($bucket_counts|get:$bucket_key|first_notnull:0) + 1
         }
 
         var.update $bucket_counts {
@@ -100,11 +100,11 @@ query "fleet/health-distribution" verb=GET {
         }
 
         var $category {
-          value = $type_categories|get:$type_key:"other"
+          value = $type_categories|get:$type_key|first_notempty:"other"
         }
 
         var $next_cat_count {
-          value = ($category_counts|get:$category:0) + 1
+          value = ($category_counts|get:$category|first_notnull:0) + 1
         }
 
         var.update $category_counts {
@@ -112,7 +112,7 @@ query "fleet/health-distribution" verb=GET {
         }
 
         var $next_cat_health {
-          value = ($category_health|get:$category:0) + $score
+          value = ($category_health|get:$category|first_notnull:0) + $score
         }
 
         var.update $category_health {
@@ -122,7 +122,7 @@ query "fleet/health-distribution" verb=GET {
         conditional {
           if ($score < 60) {
             var $next_cat_below {
-              value = ($category_below_60|get:$category:0) + 1
+              value = ($category_below_60|get:$category|first_notnull:0) + 1
             }
 
             var.update $category_below_60 {
@@ -144,13 +144,13 @@ query "fleet/health-distribution" verb=GET {
     }
 
     foreach ($bucket_indexes) {
-      each as $index {
+      each as $bucket_i {
         var $key {
-          value = $index|to_text
+          value = $bucket_i|to_text
         }
 
         var $lower {
-          value = $index * 10
+          value = $bucket_i * 10
         }
 
         // The top bucket is inclusive of 100; every other bucket ends nine above its floor.
@@ -159,7 +159,7 @@ query "fleet/health-distribution" verb=GET {
         }
 
         conditional {
-          if ($index == 9) {
+          if ($bucket_i == 9) {
             var.update $upper {
               value = 100
             }
@@ -167,7 +167,7 @@ query "fleet/health-distribution" verb=GET {
         }
 
         var $count {
-          value = $bucket_counts|get:$key:0
+          value = $bucket_counts|get:$key|first_notnull:0
         }
 
         // Label is built server-side so the chart's axis text and the bucket maths can never disagree.
@@ -177,7 +177,7 @@ query "fleet/health-distribution" verb=GET {
 
         array.push $buckets {
           value = {
-            index: $index
+            index: $bucket_i
             label: $label
             min  : $lower
             max  : $upper
@@ -199,15 +199,15 @@ query "fleet/health-distribution" verb=GET {
     foreach ($category_order) {
       each as $cat {
         var $cat_count {
-          value = $category_counts|get:$cat:0
+          value = $category_counts|get:$cat|first_notnull:0
         }
 
         var $cat_health {
-          value = $category_health|get:$cat:0
+          value = $category_health|get:$cat|first_notnull:0
         }
 
         var $cat_below {
-          value = $category_below_60|get:$cat:0
+          value = $category_below_60|get:$cat|first_notnull:0
         }
 
         var $cat_avg {

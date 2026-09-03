@@ -15,7 +15,7 @@ query "telemetry" verb=POST {
     // Wide-format reading: {metric_key: value}. Non-numeric values (state strings) are stored but skipped by the baseline pass.
     json metrics
 
-    // Declared so a device that cannot set headers can still authenticate; mw_api_key_auth reads it as the last of three transports.
+    // Declared so a device that cannot set headers can still authenticate; Nerve/fn_api_key_auth reads it as the last of three transports.
     text api_key?
   }
 
@@ -163,8 +163,17 @@ query "telemetry" verb=POST {
     }
 
     // {metric_key: previous_value}. Mandatory, not optional: fn_update_baseline overwrites metric_baseline.last_value with the current reading, so once baselines are advanced the rule engine can no longer read the prior value off the row - flatline would compare the reading to itself and fire on every healthy reading.
+    // SEEDED FROM THE PRIOR metrics_latest BLOB, which $device still holds from before the patch above. The baseline pass below can only supply a previous value for NUMERIC metrics, so without this seed a flatline rule on a state metric (the seeded HVAC "compressor state flatline", exactly the case no static threshold catches) would always see previous_value == null and could never fire. Numeric keys are overwritten by the baseline's own previous_value a few lines down, so this only fills the gaps.
     var $previous_values {
       value = {}
+    }
+
+    conditional {
+      if ($device.metrics_latest != null) {
+        var.update $previous_values {
+          value = $device.metrics_latest
+        }
+      }
     }
 
     // Baselines first (they are the only source of z-scores), then rules once. That ordering is why previous_values has to be collected here.

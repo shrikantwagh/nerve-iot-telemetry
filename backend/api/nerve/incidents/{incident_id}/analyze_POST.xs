@@ -55,7 +55,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
 
     // Resolved as a variable so the prompt and the fallback text share one label.
     var $site_label {
-      value = $site|get:"name":"unknown site"
+      value = $site|get:"name"|first_notempty:"unknown site"
     }
 
     // Every member alert, oldest first: onset order is the single most diagnostic thing about a cascade.
@@ -119,7 +119,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
         } as $device_type
 
         array.push $evidence_lines {
-          value = ($device|get:"name":"device") ~ " (" ~ ($device_type|get:"name":"unknown type") ~ ") " ~ ($alert.metric_key|first_notempty:"metric") ~ "=" ~ (($alert.observed_value|first_notnull:0)|to_text) ~ " vs threshold " ~ (($alert.threshold|first_notnull:0)|to_text) ~ ", z=" ~ (($alert.z_score|first_notnull:0)|to_text) ~ ", severity=" ~ ($alert.severity|first_notempty:"warning") ~ ", fired " ~ ($alert.fired_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC"
+          value = ($device|get:"name"|first_notempty:"device") ~ " (" ~ ($device_type|get:"name"|first_notempty:"unknown type") ~ ") " ~ ($alert.metric_key|first_notempty:"metric") ~ "=" ~ (($alert.observed_value|first_notnull:0)|to_text) ~ " vs threshold " ~ (($alert.threshold|first_notnull:0)|to_text) ~ ", z=" ~ (($alert.z_score|first_notnull:0)|to_text) ~ ", severity=" ~ ($alert.severity|first_notempty:"warning") ~ ", fired " ~ ($alert.fired_at|format_timestamp:"Y-m-d H:i:s":"UTC") ~ " UTC"
         }
 
         array.push $fired_ms {
@@ -146,7 +146,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
             }
 
             array.push $device_lines {
-              value = ($device|get:"name":"device") ~ " [serial " ~ ($device|get:"serial":"unknown") ~ "] type=" ~ ($device_type|get:"name":"unknown") ~ "/" ~ ($device_type|get:"category":"other") ~ ", site=" ~ $site_label ~ ", location=" ~ ($device|get:"location_label":"unspecified") ~ ", status=" ~ ($device|get:"status":"unknown") ~ ", health=" ~ (($device|get:"health_score":0)|to_text) ~ ", firmware=" ~ ($device|get:"firmware_version":"unknown") ~ ", uplink_device_id=" ~ (($device|get:"uplink_device_id":0)|to_text)
+              value = ($device|get:"name"|first_notempty:"device") ~ " [serial " ~ ($device|get:"serial"|first_notempty:"unknown") ~ "] type=" ~ ($device_type|get:"name"|first_notempty:"unknown") ~ "/" ~ ($device_type|get:"category"|first_notempty:"other") ~ ", site=" ~ $site_label ~ ", location=" ~ ($device|get:"location_label"|first_notempty:"unspecified") ~ ", status=" ~ ($device|get:"status"|first_notempty:"unknown") ~ ", health=" ~ (($device|get:"health_score"|first_notnull:0)|to_text) ~ ", firmware=" ~ ($device|get:"firmware_version"|first_notempty:"unknown") ~ ", uplink_device_id=" ~ (($device|get:"uplink_device_id"|first_notnull:0)|to_text)
             }
           }
         }
@@ -256,12 +256,12 @@ query "incidents/{incident_id}/analyze" verb=POST {
             }
 
             array.push $trend_lines {
-              value = ($trend_device|get:"name":"device") ~ " " ~ $trend_metric ~ ": " ~ (($numeric_series|count)|to_text) ~ " x " ~ ((($ordered_buckets|first)|get:"bucket_seconds":300)|to_text) ~ "s buckets oldest-to-newest [" ~ ($avg_series|join:", ") ~ "], min=" ~ ((($numeric_series|array_min)|round:2)|to_text) ~ ", max=" ~ ((($numeric_series|array_max)|round:2)|to_text) ~ ", net change=" ~ (($series_delta|round:2)|to_text)
+              value = ($trend_device|get:"name"|first_notempty:"device") ~ " " ~ $trend_metric ~ ": " ~ (($numeric_series|count)|to_text) ~ " x " ~ ((($ordered_buckets|first)|get:"bucket_seconds"|first_notnull:300)|to_text) ~ "s buckets oldest-to-newest [" ~ ($avg_series|join:", ") ~ "], min=" ~ ((($numeric_series|array_min)|round:2)|to_text) ~ ", max=" ~ ((($numeric_series|array_max)|round:2)|to_text) ~ ", net change=" ~ (($series_delta|round:2)|to_text)
             }
           }
           else {
             array.push $trend_lines {
-              value = ($trend_device|get:"name":"device") ~ " " ~ $trend_metric ~ ": no rollup history available yet"
+              value = ($trend_device|get:"name"|first_notempty:"device") ~ " " ~ $trend_metric ~ ": no rollup history available yet"
             }
           }
         }
@@ -389,7 +389,7 @@ query "incidents/{incident_id}/analyze" verb=POST {
 
         // The prompt carries facts already in the database and nothing else: no derived claims for the model to inherit as if they were observations.
         var $user_prompt {
-          value = "INCIDENT\nTitle: " ~ $incident.title ~ "\nCurrent severity: " ~ ($incident.severity|first_notempty:"warning") ~ "\nCurrent state: " ~ ($incident.state|first_notempty:"open") ~ "\nSite: " ~ $site_label ~ " (region " ~ ($site|get:"region":"unknown") ~ ")\nCorrelation key: " ~ ($incident.correlation_key|first_notempty:"none") ~ "\nWhy these alerts were grouped: " ~ ($incident.correlation_reason|first_notempty:"not recorded") ~ "\nAlerts in incident: " ~ ($alert_count|to_text) ~ " (" ~ ($critical_count|to_text) ~ " critical)\nDistinct devices affected: " ~ ($device_count|to_text) ~ "\nMetrics involved: " ~ $metric_label ~ "\nFirst alert fired (UTC): " ~ $span_start ~ "\nMost recent alert fired (UTC): " ~ $span_end ~ "\nMinutes since onset: " ~ ($duration_minutes|to_text) ~ "\n\nAFFECTED DEVICES\n- " ~ ($device_lines|join:"\n- ") ~ "\n\nALERT OBSERVATIONS (device, type, metric, observed vs threshold, z-score, severity, fire time)\n- " ~ ($evidence_lines|join:"\n- ") ~ "\n\nRECENT METRIC TRENDS (5-minute rollup averages, oldest to newest)\n- " ~ ($trend_lines|join:"\n- ")
+          value = "INCIDENT\nTitle: " ~ $incident.title ~ "\nCurrent severity: " ~ ($incident.severity|first_notempty:"warning") ~ "\nCurrent state: " ~ ($incident.state|first_notempty:"open") ~ "\nSite: " ~ $site_label ~ " (region " ~ ($site|get:"region"|first_notempty:"unknown") ~ ")\nCorrelation key: " ~ ($incident.correlation_key|first_notempty:"none") ~ "\nWhy these alerts were grouped: " ~ ($incident.correlation_reason|first_notempty:"not recorded") ~ "\nAlerts in incident: " ~ ($alert_count|to_text) ~ " (" ~ ($critical_count|to_text) ~ " critical)\nDistinct devices affected: " ~ ($device_count|to_text) ~ "\nMetrics involved: " ~ $metric_label ~ "\nFirst alert fired (UTC): " ~ $span_start ~ "\nMost recent alert fired (UTC): " ~ $span_end ~ "\nMinutes since onset: " ~ ($duration_minutes|to_text) ~ "\n\nAFFECTED DEVICES\n- " ~ ($device_lines|join:"\n- ") ~ "\n\nALERT OBSERVATIONS (device, type, metric, observed vs threshold, z-score, severity, fire time)\n- " ~ ($evidence_lines|join:"\n- ") ~ "\n\nRECENT METRIC TRENDS (5-minute rollup averages, oldest to newest)\n- " ~ ($trend_lines|join:"\n- ")
         }
 
         function.run "Nerve/fn_claude" {
@@ -425,27 +425,27 @@ query "incidents/{incident_id}/analyze" verb=POST {
         conditional {
           if (($ai.fallback_used == false) && ($ai.json != null)) {
             var.update $summary {
-              value = $ai.json|get:"summary":$summary
+              value = $ai.json|get:"summary"|first_notnull:$summary
             }
 
             var.update $root_cause {
-              value = $ai.json|get:"root_cause":$root_cause
+              value = $ai.json|get:"root_cause"|first_notnull:$root_cause
             }
 
             var.update $confidence {
-              value = ($ai.json|get:"confidence":0.3)|to_decimal
+              value = ($ai.json|get:"confidence"|first_notnull:0.3)|to_decimal
             }
 
             var.update $remediation {
-              value = ($ai.json|get:"remediation":$remediation)|safe_array
+              value = ($ai.json|get:"remediation"|first_notnull:$remediation)|safe_array
             }
 
             var.update $evidence {
-              value = ($ai.json|get:"evidence":$evidence_lines)|safe_array
+              value = ($ai.json|get:"evidence"|first_notnull:$evidence_lines)|safe_array
             }
 
             var.update $suggested_commands {
-              value = ($ai.json|get:"suggested_commands":$suggested_commands)|safe_array
+              value = ($ai.json|get:"suggested_commands"|first_notnull:$suggested_commands)|safe_array
             }
 
             var.update $fallback_used {

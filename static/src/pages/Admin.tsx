@@ -164,7 +164,7 @@ function ApiKeysTab({ sites }: { sites: AsyncState<Site[]> }) {
   const [createOpen, setCreateOpen] = useState(false)
   const [name, setName] = useState('')
   const [siteId, setSiteId] = useState('')
-  const [created, setCreated] = useState<{ api_key: ApiKey; plaintext: string; warning?: string } | null>(
+  const [created, setCreated] = useState<{ api_key: ApiKey; plaintext_key: string; warning?: string } | null>(
     null
   )
   const [stored, setStored] = useState(false)
@@ -346,11 +346,11 @@ function ApiKeysTab({ sites }: { sites: AsyncState<Site[]> }) {
                 color: 'var(--text-primary)',
               }}
             >
-              {created.plaintext}
+              {created.plaintext_key}
             </div>
 
             <div className="flex items-center gap-2">
-              <CopyButton text={created.plaintext} label="Copy key" />
+              <CopyButton text={created.plaintext_key} label="Copy key" />
               <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
                 Key “{created.api_key.name}”, prefix {created.api_key.key_prefix}… — the prefix is all you
                 will see from here on.

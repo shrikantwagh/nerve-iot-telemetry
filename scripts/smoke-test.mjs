@@ -78,7 +78,9 @@ async function call(group, pathname, { method = 'GET', body, token, apiKey, time
   const headers = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (apiKey) headers['X-API-Key'] = apiKey;
+  // Bearer: custom headers are not readable in XanoScript on this instance, so the
+  // bearer transport is the one Nerve documents and the one worth testing.
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);

@@ -43,7 +43,7 @@ query "ai/rule-from-text" verb=POST {
 
     // An unrecognised role scores 0 and is denied - failing closed is the only safe default.
     var $role_rank {
-      value = $role_levels|get:$user.role:0
+      value = $role_levels|get:$user.role|first_notnull:0
     }
 
     // Proposing is open to every role, including the demo account: it writes nothing but an ai_insight row. Persisting is an operator action, and it mutates fleet state, so the demo account is refused.
@@ -135,7 +135,7 @@ query "ai/rule-from-text" verb=POST {
         foreach ($schema) {
           each as $metric {
             var $mkey {
-              value = ($metric|get:"key":"")|to_text
+              value = ($metric|get:"key"|first_notempty:"")|to_text
             }
 
             array.push $metric_keys {
@@ -143,7 +143,7 @@ query "ai/rule-from-text" verb=POST {
             }
 
             array.push $metric_lines {
-              value = $mkey ~ " on " ~ ($dt.code|to_text) ~ " [" ~ (($metric|get:"unit":"")|to_text) ~ "] nominal " ~ (($metric|get:"nominal_min":"?")|to_text) ~ " to " ~ (($metric|get:"nominal_max":"?")|to_text)
+              value = $mkey ~ " on " ~ ($dt.code|to_text) ~ " [" ~ (($metric|get:"unit"|first_notempty:"")|to_text) ~ "] nominal " ~ (($metric|get:"nominal_min"|first_notempty:"?")|to_text) ~ " to " ~ (($metric|get:"nominal_max"|first_notempty:"?")|to_text)
             }
           }
         }
@@ -265,7 +265,7 @@ query "ai/rule-from-text" verb=POST {
         }
 
         var.update $p_condition {
-          value = ($proposal|get:"condition":"gt")|to_text
+          value = ($proposal|get:"condition"|first_notempty:"gt")|to_text
         }
 
         var.update $p_metric_key {
@@ -281,19 +281,19 @@ query "ai/rule-from-text" verb=POST {
         }
 
         var.update $p_window_seconds {
-          value = ($proposal|get:"window_seconds":0)|to_int
+          value = ($proposal|get:"window_seconds"|first_notnull:0)|to_int
         }
 
         var.update $p_z_threshold {
-          value = ($proposal|get:"z_threshold":3)|to_decimal
+          value = ($proposal|get:"z_threshold"|first_notnull:3)|to_decimal
         }
 
         var.update $p_severity {
-          value = ($proposal|get:"severity":"warning")|to_text
+          value = ($proposal|get:"severity"|first_notempty:"warning")|to_text
         }
 
         var.update $p_cooldown_seconds {
-          value = ($proposal|get:"cooldown_seconds":900)|to_int
+          value = ($proposal|get:"cooldown_seconds"|first_notnull:900)|to_int
         }
 
         var.update $p_dt_code {

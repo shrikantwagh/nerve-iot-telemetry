@@ -66,7 +66,7 @@ function "Nerve/fn_correlate" {
               value = "site:" ~ ($device.site_id|to_text) ~ "|uplink:" ~ ($device.uplink_device_id|to_text)
             }
           }
-          elseif (($device_type|get:"category":"other") == "gateway") {
+          elseif (($device_type|get:"category"|first_notempty:"other") == "gateway") {
             var.update $correlation_key {
               value = "site:" ~ ($device.site_id|to_text) ~ "|uplink:" ~ ($device.id|to_text)
             }
@@ -80,7 +80,7 @@ function "Nerve/fn_correlate" {
             device_id     : $device.id
             device_name   : $device.name
             device_type_id: $device.device_type_id
-            type_name     : $device_type|get:"name":"unknown type"
+            type_name     : $device_type|get:"name"|first_notempty:"unknown type"
             site_id       : $device.site_id
             metric_key    : $alert.metric_key
             observed_value: $alert.observed_value
@@ -265,7 +265,7 @@ function "Nerve/fn_correlate" {
 
         // Titles are read in a list view, so the site name has to be in them.
         var $site_label {
-          value = $site|get:"name":"unknown site"
+          value = $site|get:"name"|first_notempty:"unknown site"
         }
 
         // Metric list as prose.
@@ -312,11 +312,11 @@ function "Nerve/fn_correlate" {
         conditional {
           if ($existing != null) {
             var.update $previous_alerts {
-              value = $existing|get:"alert_count":0
+              value = $existing|get:"alert_count"|first_notnull:0
             }
 
             var.update $previous_devices {
-              value = $existing|get:"device_count":0
+              value = $existing|get:"device_count"|first_notnull:0
             }
           }
         }
@@ -490,23 +490,23 @@ function "Nerve/fn_correlate" {
             conditional {
               if (($ai.fallback_used == false) && ($ai.json != null)) {
                 var.update $ai_summary {
-                  value = $ai.json|get:"summary":$ai_summary
+                  value = $ai.json|get:"summary"|first_notnull:$ai_summary
                 }
 
                 var.update $ai_root_cause {
-                  value = $ai.json|get:"root_cause":$ai_root_cause
+                  value = $ai.json|get:"root_cause"|first_notnull:$ai_root_cause
                 }
 
                 var.update $ai_confidence {
-                  value = ($ai.json|get:"confidence":0.35)|to_decimal
+                  value = ($ai.json|get:"confidence"|first_notnull:0.35)|to_decimal
                 }
 
                 var.update $ai_remediation {
-                  value = ($ai.json|get:"remediation":$empty_list)|safe_array
+                  value = ($ai.json|get:"remediation"|first_notnull:$empty_list)|safe_array
                 }
 
                 var.update $ai_evidence {
-                  value = ($ai.json|get:"evidence":$evidence_lines)|safe_array
+                  value = ($ai.json|get:"evidence"|first_notnull:$evidence_lines)|safe_array
                 }
 
                 var.update $ai_fallback_used {

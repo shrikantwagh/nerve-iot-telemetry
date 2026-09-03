@@ -115,7 +115,7 @@ query "ai/query" verb=POST {
         foreach ($schema) {
           each as $metric {
             array.push $metric_keys {
-              value = $metric|get:"key":""
+              value = $metric|get:"key"|first_notempty:""
             }
           }
         }
@@ -135,7 +135,7 @@ query "ai/query" verb=POST {
     foreach ($entity_allow) {
       each as $entity_name {
         var $columns {
-          value = ($field_allow|get:$entity_name:[])|join:", "
+          value = ($field_allow|get:$entity_name|safe_array)|join:", "
         }
 
         array.push $schema_lines {
@@ -268,11 +268,11 @@ query "ai/query" verb=POST {
         }
 
         var.update $p_entity {
-          value = ($plan|get:"entity":"device")|to_text
+          value = ($plan|get:"entity"|first_notempty:"device")|to_text
         }
 
         var.update $p_filters {
-          value = ($plan|get:"filters":[])|safe_array
+          value = ($plan|get:"filters"|safe_array)|safe_array
         }
 
         // time_range, aggregate, sort and chart_hint are nested objects that may be absent entirely; get on a null parent yields null, which every default below absorbs.
@@ -313,11 +313,11 @@ query "ai/query" verb=POST {
         }
 
         var.update $p_sort_dir {
-          value = ($so|get:"direction":"desc")|to_text
+          value = ($so|get:"direction"|first_notempty:"desc")|to_text
         }
 
         var.update $p_limit {
-          value = ($plan|get:"limit":50)|to_int
+          value = ($plan|get:"limit"|first_notnull:50)|to_int
         }
 
         var $ch {
@@ -325,7 +325,7 @@ query "ai/query" verb=POST {
         }
 
         var.update $p_chart_type {
-          value = ($ch|get:"type":"table")|to_text
+          value = ($ch|get:"type"|first_notempty:"table")|to_text
         }
 
         var.update $p_chart_x {
@@ -515,7 +515,7 @@ query "ai/query" verb=POST {
 
     // Empty when the entity was rejected, which makes every field check below fail loudly rather than quietly passing on a nonexistent table.
     var $allowed_fields {
-      value = ($field_allow|get:$p_entity:[])|safe_array
+      value = ($field_allow|get:$p_entity|safe_array)|safe_array
     }
 
     // Only filters that pass BOTH gates survive into this array, and it is the only filter list the executor ever sees.
@@ -527,11 +527,11 @@ query "ai/query" verb=POST {
     foreach ($p_filters) {
       each as $filter {
         var $f_field {
-          value = ($filter|get:"field":"")|to_text
+          value = ($filter|get:"field"|first_notempty:"")|to_text
         }
 
         var $f_op {
-          value = ($filter|get:"op":"")|to_text
+          value = ($filter|get:"op"|first_notempty:"")|to_text
         }
 
         conditional {

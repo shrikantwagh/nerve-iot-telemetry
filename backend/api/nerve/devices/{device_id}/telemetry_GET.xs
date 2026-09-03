@@ -197,7 +197,7 @@ query "devices/{device_id}/telemetry" verb=GET {
         foreach ($keys) {
           each as $key {
             var $schema_matches {
-              value = $schema_index|get:$key:[]
+              value = $schema_index|get:$key|safe_array
             }
 
             var $schema_entry {
@@ -247,7 +247,7 @@ query "devices/{device_id}/telemetry" verb=GET {
             array.push $series {
               value = {
                 metric_key : $key
-                label      : $schema_entry|get:"label":$key
+                label      : $schema_entry|get:"label"|first_notnull:$key
                 unit       : $schema_entry|get:"unit"
                 kind       : $schema_entry|get:"kind"
                 nominal_min: $schema_entry|get:"nominal_min"
@@ -265,7 +265,7 @@ query "devices/{device_id}/telemetry" verb=GET {
         foreach ($keys) {
           each as $key {
             var $schema_matches {
-              value = $schema_index|get:$key:[]
+              value = $schema_index|get:$key|safe_array
             }
 
             var $schema_entry {
@@ -347,7 +347,7 @@ query "devices/{device_id}/telemetry" verb=GET {
             array.push $series {
               value = {
                 metric_key : $key
-                label      : $schema_entry|get:"label":$key
+                label      : $schema_entry|get:"label"|first_notnull:$key
                 unit       : $schema_entry|get:"unit"
                 kind       : $schema_entry|get:"kind"
                 nominal_min: $schema_entry|get:"nominal_min"

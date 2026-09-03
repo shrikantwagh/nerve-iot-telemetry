@@ -97,11 +97,11 @@ query "incidents/{incident_id}" verb=GET {
             id              : $alert.id
             alert_rule_id   : $alert.alert_rule_id
             device_id       : $alert.device_id
-            device_name     : $device|get:"name":null
-            device_serial   : $device|get:"serial":null
-            device_type_id  : $device|get:"device_type_id":null
-            device_type_name: $device_type|get:"name":null
-            device_type_code: $device_type|get:"code":null
+            device_name     : $device|get:"name"
+            device_serial   : $device|get:"serial"
+            device_type_id  : $device|get:"device_type_id"
+            device_type_name: $device_type|get:"name"
+            device_type_code: $device_type|get:"code"
             metric_key      : $alert.metric_key
             observed_value  : $alert.observed_value
             threshold       : $alert.threshold
@@ -127,19 +127,19 @@ query "incidents/{incident_id}" verb=GET {
             array.push $devices {
               value = {
                 id             : $alert.device_id
-                name           : $device|get:"name":null
-                serial         : $device|get:"serial":null
-                status         : $device|get:"status":null
-                health_score   : $device|get:"health_score":null
-                site_id        : $device|get:"site_id":null
-                location_label : $device|get:"location_label":null
-                firmware_version: $device|get:"firmware_version":null
-                last_seen_at   : $device|get:"last_seen_at":null
-                uplink_device_id: $device|get:"uplink_device_id":null
-                device_type_id : $device|get:"device_type_id":null
-                type_name      : $device_type|get:"name":null
-                type_category  : $device_type|get:"category":null
-                metrics_latest : $device|get:"metrics_latest":null
+                name           : $device|get:"name"
+                serial         : $device|get:"serial"
+                status         : $device|get:"status"
+                health_score   : $device|get:"health_score"
+                site_id        : $device|get:"site_id"
+                location_label : $device|get:"location_label"
+                firmware_version: $device|get:"firmware_version"
+                last_seen_at   : $device|get:"last_seen_at"
+                uplink_device_id: $device|get:"uplink_device_id"
+                device_type_id : $device|get:"device_type_id"
+                type_name      : $device_type|get:"name"
+                type_category  : $device_type|get:"category"
+                metrics_latest : $device|get:"metrics_latest"
               }
             }
           }
@@ -151,7 +151,7 @@ query "incidents/{incident_id}" verb=GET {
             ts       : $alert.fired_at
             ts_ms    : $alert.fired_at|to_ms
             kind     : "alert_fired"
-            label    : ($device|get:"name":"device") ~ " " ~ ($alert.metric_key|first_notempty:"metric") ~ " fired (" ~ $alert.severity ~ ")"
+            label    : ($device|get:"name"|first_notempty:"device") ~ " " ~ ($alert.metric_key|first_notempty:"metric") ~ " fired (" ~ $alert.severity ~ ")"
             device_id: $alert.device_id
             alert_id : $alert.id
           }
@@ -165,7 +165,7 @@ query "incidents/{incident_id}" verb=GET {
                 ts       : $alert.resolved_at
                 ts_ms    : $alert.resolved_at|to_ms
                 kind     : "alert_resolved"
-                label    : ($device|get:"name":"device") ~ " " ~ ($alert.metric_key|first_notempty:"metric") ~ " resolved"
+                label    : ($device|get:"name"|first_notempty:"device") ~ " " ~ ($alert.metric_key|first_notempty:"metric") ~ " resolved"
                 device_id: $alert.device_id
                 alert_id : $alert.id
               }
@@ -199,7 +199,7 @@ query "incidents/{incident_id}" verb=GET {
           value = {
             id         : $command.id
             device_id  : $command.device_id
-            device_name: $command_device|get:"name":null
+            device_name: $command_device|get:"name"
             command    : $command.command
             payload    : $command.payload
             state      : $command.state
@@ -218,7 +218,7 @@ query "incidents/{incident_id}" verb=GET {
             ts       : $command.created_at
             ts_ms    : $command.created_at|to_ms
             kind     : "command_issued"
-            label    : "Command " ~ $command.command ~ " issued to " ~ ($command_device|get:"name":"device")
+            label    : "Command " ~ $command.command ~ " issued to " ~ ($command_device|get:"name"|first_notempty:"device")
             device_id: $command.device_id
             alert_id : null
           }

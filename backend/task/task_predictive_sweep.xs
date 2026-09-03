@@ -90,18 +90,18 @@ task task_predictive_sweep {
         } as $device_type
 
         var $schema {
-          value = ($device_type|get:"metric_schema":[])|safe_array
+          value = ($device_type|get:"metric_schema"|safe_array)|safe_array
         }
 
         foreach ($schema) {
           each as $metric {
             // Only gauges. Fitting a line through a monotonic counter predicts nothing but the clock, and a state metric has no ordering to extrapolate.
             var $kind {
-              value = $metric|get:"kind":"gauge"
+              value = $metric|get:"kind"|first_notempty:"gauge"
             }
 
             var $metric_key {
-              value = $metric|get:"key":""
+              value = $metric|get:"key"|first_notempty:""
             }
 
             conditional {
@@ -375,11 +375,11 @@ task task_predictive_sweep {
 
                                 // Human label from the schema when the type author supplied one; the raw key otherwise.
                                 var $metric_label {
-                                  value = ($metric|get:"label":$metric_key)|first_notempty:$metric_key
+                                  value = ($metric|get:"label"|first_notnull:$metric_key)|first_notempty:$metric_key
                                 }
 
                                 var $unit {
-                                  value = ($metric|get:"unit":"")|to_text
+                                  value = ($metric|get:"unit"|first_notempty:"")|to_text
                                 }
 
                                 // Days reads better than hours in a sentence and in a list view.
@@ -439,7 +439,7 @@ task task_predictive_sweep {
 
                                 // Facts only, all of them already in the database. Semicolon-separated rather than newline-separated because literal escape handling in XanoScript strings is unverified here.
                                 var $user_prompt {
-                                  value = "Device: " ~ $device.name ~ " (" ~ $device.serial ~ "); device type: " ~ ($device_type|get:"name":"unknown") ~ "; category: " ~ ($device_type|get:"category":"other") ~ "; metric: " ~ $metric_label ~ " (" ~ $metric_key ~ ")" ~ "; unit: " ~ ($unit|first_notempty:"unspecified") ~ "; current value: " ~ ($last_value|to_text) ~ "; trend: " ~ $direction ~ " " ~ (($slope|round:6)|to_text) ~ " per hour; r-squared: " ~ (($r2|round:3)|to_text) ~ " over " ~ ($n|to_text) ~ " five-minute buckets spanning " ~ ($window_hours|to_text) ~ " hours; limit being approached: " ~ ($limit_kind|to_text) ~ " = " ~ (($limit_value|to_decimal)|to_text) ~ "; projected to reach that limit in " ~ ($days_to_limit|to_text) ~ " day(s)."
+                                  value = "Device: " ~ $device.name ~ " (" ~ $device.serial ~ "); device type: " ~ ($device_type|get:"name"|first_notempty:"unknown") ~ "; category: " ~ ($device_type|get:"category"|first_notempty:"other") ~ "; metric: " ~ $metric_label ~ " (" ~ $metric_key ~ ")" ~ "; unit: " ~ ($unit|first_notempty:"unspecified") ~ "; current value: " ~ ($last_value|to_text) ~ "; trend: " ~ $direction ~ " " ~ (($slope|round:6)|to_text) ~ " per hour; r-squared: " ~ (($r2|round:3)|to_text) ~ " over " ~ ($n|to_text) ~ " five-minute buckets spanning " ~ ($window_hours|to_text) ~ " hours; limit being approached: " ~ ($limit_kind|to_text) ~ " = " ~ (($limit_value|to_decimal)|to_text) ~ "; projected to reach that limit in " ~ ($days_to_limit|to_text) ~ " day(s)."
                                 }
 
                                 function.run "Nerve/fn_claude" {
@@ -463,11 +463,11 @@ task task_predictive_sweep {
                                 conditional {
                                   if (($ai.fallback_used == false) && ($ai.json != null)) {
                                     var.update $component {
-                                      value = ($ai.json|get:"component":$component)|first_notempty:$component
+                                      value = ($ai.json|get:"component"|first_notnull:$component)|first_notempty:$component
                                     }
 
                                     var.update $recommended_action {
-                                      value = ($ai.json|get:"recommended_action":$recommended_action)|first_notempty:$recommended_action
+                                      value = ($ai.json|get:"recommended_action"|first_notnull:$recommended_action)|first_notempty:$recommended_action
                                     }
 
                                     var.update $ai_fallback_used {

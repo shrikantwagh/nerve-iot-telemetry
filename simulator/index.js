@@ -218,7 +218,10 @@ class IngestClient {
       try {
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
+          // Bearer, not a custom header: Xano does not surface custom request headers
+          // through $env.$http_headers on the deployed instance (x-api-key and three
+          // spellings of it all 401), while the bearer path uses a documented built-in.
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this.apiKey}` },
           body: JSON.stringify(body),
         });
         const text = await res.text();

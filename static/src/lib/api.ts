@@ -19,6 +19,7 @@ import type {
   AuditEntry,
   Device,
   DeviceCommand,
+  DeviceStatus,
   DeviceType,
   FleetOverview,
   HealthDistribution,
@@ -29,6 +30,7 @@ import type {
   NlQueryResult,
   Paged,
   RuleProposal,
+  Severity,
   Site,
   TimelineEntry,
   User,
@@ -289,8 +291,80 @@ export const auth = {
 /* Fleet                                                                      */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The shape `GET /fleet/overview` actually returns, as observed live.
+ *
+ * The backend groups its counters under `totals` / `devices_by_status` / etc., while the
+ * app's `FleetOverview` type is flat. Rather than churn the screen or loosen the type,
+ * the adaptation lives here — the client is the one place designed to know the wire
+ * format, and normalising once means a backend rename touches one function instead of
+ * every component that reads a tile.
+ */
+interface FleetOverviewWire {
+  generated_at?: number | string
+  totals?: {
+    devices?: number
+    avg_health_score?: number
+    below_health_60?: number
+    readings_last_hour?: number
+    open_incidents?: number
+    firing_alerts?: number
+  }
+  devices_by_status?: Partial<Record<DeviceStatus, number>>
+  incidents_open_by_severity?: Partial<Record<Severity, number>>
+  alerts_firing_by_severity?: Partial<Record<Severity, number>>
+  sites?: Site[]
+  worst_devices?: Device[]
+  ai_digest?: AiInsight | null
+}
+
+const ZERO_STATUS: Record<DeviceStatus, number> = {
+  online: 0,
+  degraded: 0,
+  offline: 0,
+  maintenance: 0,
+  provisioning: 0,
+}
+const ZERO_SEVERITY: Record<Severity, number> = { critical: 0, warning: 0, info: 0 }
+
+function normalizeOverview(wire: FleetOverviewWire | FleetOverview | null): FleetOverview {
+  // Tolerate the flat shape too, so this keeps working if the backend is ever changed
+  // to emit it directly.
+  const flat = wire as FleetOverview | null
+  if (flat && typeof flat.device_total === 'number') {
+    return {
+      ...flat,
+      status_counts: { ...ZERO_STATUS, ...(flat.status_counts ?? {}) },
+      incident_counts: { ...ZERO_SEVERITY, ...(flat.incident_counts ?? {}) },
+      alert_counts: { ...ZERO_SEVERITY, ...(flat.alert_counts ?? {}) },
+      sites: flat.sites ?? [],
+      worst_devices: flat.worst_devices ?? [],
+    }
+  }
+
+  const w = (wire ?? {}) as FleetOverviewWire
+  const t = w.totals ?? {}
+  return {
+    device_total: t.devices ?? 0,
+    status_counts: { ...ZERO_STATUS, ...(w.devices_by_status ?? {}) },
+    incident_counts: { ...ZERO_SEVERITY, ...(w.incidents_open_by_severity ?? {}) },
+    alert_counts: { ...ZERO_SEVERITY, ...(w.alerts_firing_by_severity ?? {}) },
+    avg_health: t.avg_health_score ?? 0,
+    unhealthy_count: t.below_health_60 ?? 0,
+    readings_last_hour: t.readings_last_hour ?? 0,
+    sites: w.sites ?? [],
+    worst_devices: w.worst_devices ?? [],
+    digest: w.ai_digest ?? null,
+    // Authoritative totals from the backend rather than a sum of the severity buckets,
+    // which is what the sidebar badges fall back to.
+    open_incident_total: t.open_incidents ?? 0,
+    firing_alert_total: t.firing_alerts ?? 0,
+  }
+}
+
 export const fleet = {
-  overview: (signal?: AbortSignal) => request<FleetOverview>('/fleet/overview', { signal }),
+  overview: (signal?: AbortSignal) =>
+    request<FleetOverviewWire>('/fleet/overview', { signal }).then(normalizeOverview),
   healthDistribution: () => request<HealthDistribution>('/fleet/health-distribution'),
 }
 
@@ -480,7 +554,7 @@ export const admin = {
 
   /** The plaintext key is returned exactly once, here. It is never retrievable again. */
   createApiKey: (name: string, site_id?: number) =>
-    request<{ api_key: ApiKey; plaintext: string; warning: string }>('/api-keys', {
+    request<{ api_key: ApiKey; plaintext_key: string; warning: string }>('/api-keys', {
       method: 'POST',
       body: { name, site_id },
     }),

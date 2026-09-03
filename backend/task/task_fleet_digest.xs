@@ -176,30 +176,36 @@ task task_fleet_digest {
     }
 
     // The counters, kept as one object so the same structure goes into the prompt, into ai_insight.payload, and into the audit row - three consumers, one source of truth.
+    // KEY NAMES ARE NOT FREE HERE. GET /ai/digest serves ai_insight.payload back verbatim as its `stats` object, and on `refresh=true` it writes that same object itself - so this task and that endpoint are two writers of ONE contract. The names below are the endpoint's, deliberately, including `worst_devices` being an array of one-line strings rather than of rows (the row objects are kept alongside under a different key so nothing is lost). The 24h-suffixed names this task used before made the shape depend on which writer ran last.
     var $stats {
       value = {
-        window               : $window_label
-        window_from_ms       : $from_ms
-        window_to_ms         : $now_ms
-        devices_total        : $devices_total
-        devices_online       : $devices_online
-        devices_degraded     : $devices_degraded
-        devices_offline      : $devices_offline
-        devices_maintenance  : $devices_maintenance
-        online_pct           : $online_pct
-        alerts_total_24h     : $alerts_total
-        alerts_critical_24h  : $alerts_critical
-        alerts_warning_24h   : $alerts_warning
-        alerts_info_24h      : $alerts_info
-        alerts_firing_now    : $alerts_firing_now
-        incidents_opened_24h : $incidents_opened
-        incidents_resolved_24h: $incidents_resolved
-        incidents_active     : $incidents_active
-        alerts_per_incident  : $collapse_ratio
-        predictions_open     : $predictions_open
-        readings_24h         : $readings_24h
-        worst_devices        : $worst_devices
-        active_incidents     : $active_incidents
+        window_hours            : 24
+        window                  : $window_label
+        window_from             : $from_ms|format_timestamp:"Y-m-d H:i:s":"UTC"
+        window_to               : $now_ms|format_timestamp:"Y-m-d H:i:s":"UTC"
+        window_from_ms          : $from_ms
+        window_to_ms            : $now_ms
+        devices_total           : $devices_total
+        devices_online          : $devices_online
+        devices_degraded        : $devices_degraded
+        devices_offline_now     : $devices_offline
+        devices_maintenance     : $devices_maintenance
+        online_pct              : $online_pct
+        alerts_total            : $alerts_total
+        alerts_critical         : $alerts_critical
+        alerts_warning          : $alerts_warning
+        alerts_info             : $alerts_info
+        alerts_still_firing     : $alerts_firing_now
+        incidents_opened        : $incidents_opened
+        incidents_resolved      : $incidents_resolved
+        incidents_open_now      : $incidents_active
+        alerts_per_incident     : $collapse_ratio
+        predictions_open        : $predictions_open
+        readings_ingested       : $readings_24h
+        worst_devices           : $worst_lines
+        worst_device_rows       : $worst_devices
+        open_incident_summaries : $incident_lines
+        active_incidents        : $active_incidents
       }
     }
 
@@ -253,11 +259,11 @@ task task_fleet_digest {
     conditional {
       if (($ai.fallback_used == false) && ($ai.json != null)) {
         var $headline {
-          value = ($ai.json|get:"headline":"")|to_text
+          value = ($ai.json|get:"headline"|first_notempty:"")|to_text
         }
 
         var $summary {
-          value = ($ai.json|get:"summary":"")|to_text
+          value = ($ai.json|get:"summary"|first_notempty:"")|to_text
         }
 
         // Headline and summary are concatenated into body because ai_insight.body is a single text column and the UI shows it as the digest.
@@ -271,7 +277,7 @@ task task_fleet_digest {
         }
 
         var.update $payload {
-          value = ((($stats|set:"headline":$headline)|set:"top_risks":(($ai.json|get:"top_risks":$worst_lines)|safe_array))|set:"recommended_focus":(($ai.json|get:"recommended_focus":[])|safe_array))|set:"generated_by":"task_fleet_digest"
+          value = ((($stats|set:"headline":$headline)|set:"top_risks":(($ai.json|get:"top_risks"|first_notnull:$worst_lines)|safe_array))|set:"recommended_focus":(($ai.json|get:"recommended_focus"|safe_array)|safe_array))|set:"generated_by":"task_fleet_digest"
         }
       }
     }

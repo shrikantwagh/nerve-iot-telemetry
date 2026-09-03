@@ -49,7 +49,7 @@ query "sites" verb=GET {
         }
 
         var $next_count {
-          value = ($device_counts|get:$skey:0) + 1
+          value = ($device_counts|get:$skey|first_notnull:0) + 1
         }
 
         var.update $device_counts {
@@ -62,7 +62,7 @@ query "sites" verb=GET {
         }
 
         var $next_health {
-          value = ($health_sums|get:$skey:0) + $health
+          value = ($health_sums|get:$skey|first_notnull:0) + $health
         }
 
         var.update $health_sums {
@@ -72,7 +72,7 @@ query "sites" verb=GET {
         conditional {
           if ($device.status == "online") {
             var $next_online {
-              value = ($online_counts|get:$skey:0) + 1
+              value = ($online_counts|get:$skey|first_notnull:0) + 1
             }
 
             var.update $online_counts {
@@ -81,7 +81,7 @@ query "sites" verb=GET {
           }
           elseif ($device.status == "degraded") {
             var $next_degraded {
-              value = ($degraded_counts|get:$skey:0) + 1
+              value = ($degraded_counts|get:$skey|first_notnull:0) + 1
             }
 
             var.update $degraded_counts {
@@ -90,7 +90,7 @@ query "sites" verb=GET {
           }
           elseif ($device.status == "offline") {
             var $next_offline {
-              value = ($offline_counts|get:$skey:0) + 1
+              value = ($offline_counts|get:$skey|first_notnull:0) + 1
             }
 
             var.update $offline_counts {
@@ -127,7 +127,7 @@ query "sites" verb=GET {
             }
 
             var $next_incidents {
-              value = ($incident_counts|get:$ikey:0) + 1
+              value = ($incident_counts|get:$ikey|first_notnull:0) + 1
             }
 
             var.update $incident_counts {
@@ -137,7 +137,7 @@ query "sites" verb=GET {
             conditional {
               if ($incident.severity == "critical") {
                 var $next_critical {
-                  value = ($critical_counts|get:$ikey:0) + 1
+                  value = ($critical_counts|get:$ikey|first_notnull:0) + 1
                 }
 
                 var.update $critical_counts {
@@ -161,11 +161,11 @@ query "sites" verb=GET {
         }
 
         var $count {
-          value = $device_counts|get:$sid:0
+          value = $device_counts|get:$sid|first_notnull:0
         }
 
         var $health_sum {
-          value = $health_sums|get:$sid:0
+          value = $health_sums|get:$sid|first_notnull:0
         }
 
         // A site with no devices reports 0, not null: an empty site is a real state during rollout and should sort predictably.
@@ -194,11 +194,11 @@ query "sites" verb=GET {
             created_at      : $site.created_at
             device_count    : $count
             avg_health_score: $avg_health
-            online_count    : $online_counts|get:$sid:0
-            degraded_count  : $degraded_counts|get:$sid:0
-            offline_count   : $offline_counts|get:$sid:0
-            open_incidents  : $incident_counts|get:$sid:0
-            critical_incidents: $critical_counts|get:$sid:0
+            online_count    : $online_counts|get:$sid|first_notnull:0
+            degraded_count  : $degraded_counts|get:$sid|first_notnull:0
+            offline_count   : $offline_counts|get:$sid|first_notnull:0
+            open_incidents  : $incident_counts|get:$sid|first_notnull:0
+            critical_incidents: $critical_counts|get:$sid|first_notnull:0
           }
         }
       }

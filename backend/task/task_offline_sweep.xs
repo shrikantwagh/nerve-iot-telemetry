@@ -53,7 +53,7 @@ task task_offline_sweep {
 
         // Schema default, so a half-configured type cannot make an entire class of devices look dead.
         var $offline_after {
-          value = ($device_type|get:"offline_after_seconds":300)|to_int
+          value = ($device_type|get:"offline_after_seconds"|first_notnull:300)|to_int
         }
 
         // Epoch-ms arithmetic keeps timezones out of the comparison entirely.
@@ -137,7 +137,7 @@ task task_offline_sweep {
                     last_seen_at         : $device.last_seen_at
                     serial               : $device.serial
                     previous_status      : $device.status
-                    rule_name            : $rule|get:"name":"built-in offline detection"
+                    rule_name            : $rule|get:"name"|first_notempty:"built-in offline detection"
                   }
                 }
 

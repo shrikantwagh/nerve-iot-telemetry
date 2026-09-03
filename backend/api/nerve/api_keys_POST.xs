@@ -56,7 +56,7 @@ query "api-keys" verb=POST {
       value = "nrv_" ~ $secret
     }
 
-    // The lookup handle. The ingest middleware finds the candidate row by this, then verifies the full plaintext against key_hash - so the prefix is deliberately not secret.
+    // The lookup handle: the FIRST 8 CHARACTERS OF THE SECRET, not of the plaintext. Nerve/fn_api_key_auth recovers the same 8 characters from a presented key as `$raw_key|substr:4:8` (skipping the 4-character "nrv_" marker), then verifies the full plaintext against key_hash - so the prefix is deliberately not secret. These two derivations must stay in step or the indexed lookup misses and every ingest request degrades into a full-table bcrypt scan.
     var $key_prefix {
       value = $secret|substr:0:8
     }

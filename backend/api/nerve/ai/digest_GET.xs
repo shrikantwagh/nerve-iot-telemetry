@@ -389,7 +389,7 @@ query "ai/digest" verb=GET {
         }
 
         var.update $fallback_used {
-          value = ($existing|get:"fallback_used":true)
+          value = ($existing|get:"fallback_used"|first_notnull:true)
         }
 
         var.update $stats {

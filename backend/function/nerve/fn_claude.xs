@@ -144,7 +144,7 @@ function "Nerve/fn_claude" {
         // real one. Silently AI-less while reporting success is the worst failure mode
         // available here, so the type filter is load-bearing, not defensive.
         var $text_blocks {
-          value = ($raw|get:"content":[])|safe_array|filter:"return $this.type == 'text';"
+          value = ($raw|get:"content"|safe_array)|safe_array|filter:"return $this.type == 'text';"
         }
 
         // Concatenate every text block rather than only the first: a response split
@@ -156,12 +156,12 @@ function "Nerve/fn_claude" {
 
         // Token accounting comes from the response envelope, defaulted because usage is not contractually guaranteed.
         var.update $input_tokens {
-          value = ($raw|get:"usage.input_tokens":0)|to_int
+          value = ($raw|get:"usage.input_tokens"|first_notnull:0)|to_int
         }
 
         // Output side of the same accounting.
         var.update $output_tokens {
-          value = ($raw|get:"usage.output_tokens":0)|to_int
+          value = ($raw|get:"usage.output_tokens"|first_notnull:0)|to_int
         }
 
         // Only here is the result genuinely model-generated.

@@ -70,7 +70,7 @@ function "Nerve/fn_evaluate_rules" {
 
         // Missing z-score defaults to 0 so an anomaly rule cannot fire on an un-warmed baseline.
         var $z {
-          value = $input.z_scores|get:$rule.metric_key:0
+          value = $input.z_scores|get:$rule.metric_key|first_notnull:0
         }
 
         // flatline and rate_of_change need the previous reading, which lives on the baseline row.
@@ -240,6 +240,21 @@ function "Nerve/fn_evaluate_rules" {
             } as $bumped_rule
           }
         }
+      }
+    }
+
+    // HEALTH RECOMPUTE, and the only place it happens on the ingest path. fn_compute_health scores
+    // a device from its FIRING alerts, so without this call a device that has just tripped a
+    // critical rule keeps status `online` and health_score 100 until somebody resolves the alert -
+    // the fleet grid would never show `degraded` at all, which is the state the whole product is
+    // about. DESIGN.md rules out an alert-insert trigger (bulk inserts make per-row trigger
+    // semantics unknowable), and the offline sweep only rescores devices that went silent, so the
+    // recompute has to happen here. Gated on an actual fire, so a healthy reading pays nothing.
+    conditional {
+      if ($alerts_fired > 0) {
+        function.run "Nerve/fn_compute_health" {
+          input = {device_id: $input.device_id}
+        } as $rescored
       }
     }
   }
