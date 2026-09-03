@@ -198,7 +198,7 @@ Base: `https://<instance>.xano.io/api:<group>`
 ## 6. The AI layer
 
 One custom function, `fn_claude(system, user, max_tokens, tool_schema?)`, wraps the
-Anthropic Messages API (`claude-sonnet-5`) using `$env.ANTHROPIC_API_KEY`. Every caller
+Anthropic Messages API (`claude-opus-5`) using `$env.ANTHROPIC_API_KEY`. Every caller
 logs to `ai_insight`. Six consumers:
 
 1. **`/ai/query`** — natural language to a constrained JSON query plan (entity, filters,

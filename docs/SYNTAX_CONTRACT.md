@@ -184,7 +184,7 @@ function.run "Nerve/fn_claude" { input = {system: $sys, user_prompt: $p} } as $a
 api.request {
   url = "https://api.anthropic.com/v1/messages"
   method = "POST"
-  params = { model: "claude-sonnet-5", max_tokens: 1024, messages: [] }
+  params = { model: "claude-opus-5", max_tokens: 1024, messages: [] }
   headers = []|push:"x-api-key: " ~ $env.ANTHROPIC_API_KEY|push:"anthropic-version: 2023-06-01"|push:"Content-Type: application/json"
   timeout = 30
 } as $res

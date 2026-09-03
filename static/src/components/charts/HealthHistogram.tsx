@@ -140,7 +140,7 @@ export function HealthHistogram({
                 position="top"
                 offset={6}
                 style={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-                formatter={(v: number) => (v > 0 ? String(v) : '')}
+                formatter={(v) => (typeof v === 'number' && v > 0 ? String(v) : '')}
               />
             </Bar>
           </BarChart>

@@ -121,7 +121,7 @@ Environment variables can only be created in the Xano UI (the CLI cannot create 
 | Name | Value |
 |---|---|
 | `ANTHROPIC_API_KEY` | your Anthropic key |
-| `ANTHROPIC_MODEL` | `claude-sonnet-5` |
+| `ANTHROPIC_MODEL` | `claude-opus-5` |
 
 Every AI endpoint works without these — it falls back to a deterministic analyzer and
 sets `fallback_used`, so a fresh clone is demoable with zero credentials.

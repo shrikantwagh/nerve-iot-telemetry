@@ -294,7 +294,12 @@ export const fleet = {
   healthDistribution: () => request<HealthDistribution>('/fleet/health-distribution'),
 }
 
-export interface DeviceListParams {
+/**
+ * A type alias rather than an `interface` on purpose: TypeScript grants object *type
+ * aliases* an implicit index signature, so this stays assignable to `RequestOptions.query`
+ * without either widening the field list or casting at the call site.
+ */
+export type DeviceListParams = {
   site_id?: number
   device_type_id?: number
   status?: string
@@ -348,7 +353,8 @@ export const deviceTypes = {
 /* Alerts & rules                                                             */
 /* -------------------------------------------------------------------------- */
 
-export interface AlertListParams {
+/** Type alias, not an interface — see the note on `DeviceListParams`. */
+export type AlertListParams = {
   state?: string
   severity?: string
   device_id?: number

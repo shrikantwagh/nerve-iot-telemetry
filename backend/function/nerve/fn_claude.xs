@@ -9,8 +9,11 @@ function "Nerve/fn_claude" {
     // The user turn: the evidence the model is asked to reason over.
     text user_prompt
 
-    // Output ceiling. Generous by default because triage answers carry a remediation list.
-    int max_tokens?=1500
+    // Output ceiling. Deliberately generous: on current models adaptive thinking is on
+    // by default and its tokens count against this budget, so a 1-2k ceiling can be
+    // consumed by reasoning before any prose is emitted. Truncating a remediation list
+    // mid-item is worse than paying for headroom.
+    int max_tokens?=8000
 
     // Which ai_insight.kind this call is logged under. Must be one of the table's enum values.
     text kind
@@ -35,8 +38,13 @@ function "Nerve/fn_claude" {
     }
 
     // Model is env-driven so it can be rolled forward without touching any caller.
+    // The default is Opus 5, the current flagship. Set ANTHROPIC_MODEL to
+    // "claude-sonnet-5" to trade some quality for roughly 2.5x lower cost per token -
+    // that is a deliberate operator decision, so it belongs in configuration rather
+    // than baked in here. first_notempty (not first_notnull) so a variable set to the
+    // empty string also falls back.
     var $model {
-      value = $env.ANTHROPIC_MODEL|first_notempty:"claude-sonnet-5"
+      value = $env.ANTHROPIC_MODEL|first_notempty:"claude-opus-5"
     }
 
     // Fallback-shaped defaults up front, so the response object is identical whether or not the call happens.
@@ -126,14 +134,24 @@ function "Nerve/fn_claude" {
     // Three outcomes, kept flat: success, HTTP failure, no key. Nested if-inside-else is not supported in XanoScript.
     conditional {
       if ($status == 200) {
-        // Anthropic returns `content` as an array of blocks; the assistant prose is the first block's `text`.
-        var $blocks {
-          value = ($raw|get:"content":[])|safe_array
+        // `content` is an ARRAY OF BLOCKS and the text block is not necessarily first.
+        //
+        // This must filter on type, never index [0]. Current Claude models run adaptive
+        // thinking by default and default `thinking.display` to "omitted", which emits a
+        // leading `thinking` block whose text is empty. Taking content[0].text would then
+        // return "" on a perfectly successful 200 - and because the status was 200,
+        // fallback_used stays false, so every caller would treat an empty answer as a
+        // real one. Silently AI-less while reporting success is the worst failure mode
+        // available here, so the type filter is load-bearing, not defensive.
+        var $text_blocks {
+          value = ($raw|get:"content":[])|safe_array|filter:"return $this.type == 'text';"
         }
 
-        // Empty-string default keeps callers from having to null-check the happy path.
+        // Concatenate every text block rather than only the first: a response split
+        // across blocks (which citations and some tool paths produce) would otherwise be
+        // silently truncated at the first block boundary.
         var.update $text {
-          value = ($blocks|first)|get:"text":""
+          value = ($text_blocks|map:"return $this.text;")|join:""
         }
 
         // Token accounting comes from the response envelope, defaulted because usage is not contractually guaranteed.
