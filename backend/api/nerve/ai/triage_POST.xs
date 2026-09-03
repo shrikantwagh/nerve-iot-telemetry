@@ -116,4 +116,5 @@ query "ai/triage" verb=POST {
     incident_ids     : $sweep.incident_ids
   }
   tags = ["nerve"]
+  guid = "J9dYAn_8VjdkMSomFA60PZjw7JM"
 }

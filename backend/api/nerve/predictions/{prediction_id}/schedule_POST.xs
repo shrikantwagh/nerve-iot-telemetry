@@ -10,7 +10,7 @@ query "predictions/{prediction_id}/schedule" verb=POST {
     // When the work is booked for. Defaults below to 24 hours out, so a one-click "accept" from the queue is still a dated commitment rather than an open-ended one.
     timestamp? scheduled_for?
 
-        // Set true to also queue an enter_maintenance command, so the device stops alerting the moment the technician arrives instead of paging someone mid-service.
+    // Set true to also queue an enter_maintenance command, so the device stops alerting the moment the technician arrives instead of paging someone mid-service.
     bool issue_command?=false
 
     // Free text carried onto the queued command and into the audit detail.
@@ -77,9 +77,9 @@ query "predictions/{prediction_id}/schedule" verb=POST {
       field_name = "id"
       field_value = $input.prediction_id
       data = {
-        state       : "scheduled"
+        state        : "scheduled"
         scheduled_for: $when
-        scheduled_by: $auth.id
+        scheduled_by : $auth.id
       }
     } as $updated
 
@@ -142,4 +142,5 @@ query "predictions/{prediction_id}/schedule" verb=POST {
 
   response = {prediction: $updated, command_id: $command_id}
   tags = ["nerve"]
+  guid = "aie-su0sTRQ-oBFyMhJpiTWQz0s"
 }

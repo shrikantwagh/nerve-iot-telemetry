@@ -253,4 +253,5 @@ query "alert-rules" verb=POST {
 
   response = $rule
   tags = ["nerve"]
+  guid = "eXft_RP8-IXSXQZt4jDqaVgzzJc"
 }

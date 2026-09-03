@@ -120,4 +120,5 @@ query "alerts/bulk-ack" verb=POST {
     alert_ids: $changed_ids
   }
   tags = ["nerve"]
+  guid = "yEfxC8NYeF9ZTj8wZKTi3T0-emg"
 }

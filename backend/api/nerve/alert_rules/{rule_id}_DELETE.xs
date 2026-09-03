@@ -116,4 +116,5 @@ query "alert-rules/{rule_id}" verb=DELETE {
     detached_alerts: $detached
   }
   tags = ["nerve"]
+  guid = "1VW5MA8-jSRYf9FVl_tqiJflfuE"
 }

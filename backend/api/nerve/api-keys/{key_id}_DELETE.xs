@@ -76,4 +76,5 @@ query "api-keys/{key_id}" verb=DELETE {
     note: "Disabled, not deleted. Telemetry and alerts already attributed to this key keep their reference."
   }
   tags = ["nerve"]
+  guid = "3I4ydSiwAI9Hvc2fivo_SBLPAlo"
 }

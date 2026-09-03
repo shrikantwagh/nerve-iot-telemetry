@@ -83,4 +83,5 @@ query "devices/{device_id}" verb=GET {
     recent_commands : $recent_commands
   }
   tags = ["nerve"]
+  guid = "zdtrzwOCTqJJIUNSYQoAWMujPcw"
 }

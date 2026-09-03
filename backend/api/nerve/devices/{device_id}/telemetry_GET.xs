@@ -379,4 +379,5 @@ query "devices/{device_id}/telemetry" verb=GET {
     series         : $series
   }
   tags = ["nerve"]
+  guid = "ZH5FD_dK2QBq2bwn0jAwHd_akUo"
 }

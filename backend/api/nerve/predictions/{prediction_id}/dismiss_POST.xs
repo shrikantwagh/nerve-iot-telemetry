@@ -108,4 +108,5 @@ query "predictions/{prediction_id}/dismiss" verb=POST {
 
   response = $updated
   tags = ["nerve"]
+  guid = "Jz7s9-bVWnJ56BBYwx39RgpxTZg"
 }

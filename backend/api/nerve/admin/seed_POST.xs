@@ -418,4 +418,5 @@ query "admin/seed" verb=POST {
     note: "Idempotent. Sites and device types are refreshed from the catalog on every run; existing alert rules are left untouched so retuned thresholds survive a re-seed."
   }
   tags = ["nerve"]
+  guid = "cxjllsZ4lIa7UiuTHbKS6MNpIhM"
 }

@@ -250,4 +250,5 @@ function "Nerve/fn_claude" {
     error        : $fail_reason
   }
   tags = ["nerve"]
+  guid = "EwasZx4rkiXxCrfteEbyKhYl2OM"
 }

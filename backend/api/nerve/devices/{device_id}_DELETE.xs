@@ -149,4 +149,5 @@ query "devices/{device_id}" verb=DELETE {
     }
   }
   tags = ["nerve"]
+  guid = "PWtLI1cQi0FwGHFqISRLP5UfLPc"
 }

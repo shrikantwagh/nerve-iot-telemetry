@@ -178,4 +178,5 @@ query "ai/insights" verb=GET {
     page_stats: $page_stats
   }
   tags = ["nerve"]
+  guid = "uJSukuwwYABnXhhkD_oSp6emcgo"
 }

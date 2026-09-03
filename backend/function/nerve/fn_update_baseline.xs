@@ -168,4 +168,5 @@ function "Nerve/fn_update_baseline" {
     previous_value: $prev_last_value
   }
   tags = ["nerve"]
+  guid = "wlptwf2_FDAe8UithFoNW0ORNgA"
 }

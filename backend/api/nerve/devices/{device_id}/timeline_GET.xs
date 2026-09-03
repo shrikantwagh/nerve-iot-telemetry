@@ -179,7 +179,7 @@ query "devices/{device_id}/timeline" verb=GET {
 
     // Sorted on the numeric epoch field added above rather than on the timestamp, so ordering never depends on how timestamps compare as text. false = descending.
     var $sorted {
-      value = $events|fsort:"ts_ms":"number":false
+      value = $events|sort:"ts_ms":"number":false
     }
 
     // Each source contributed up to `limit` rows, so the merged list can be four times too long; the newest `limit` of it is the answer.
@@ -197,4 +197,5 @@ query "devices/{device_id}/timeline" verb=GET {
     events        : $feed
   }
   tags = ["nerve"]
+  guid = "Aulle5NIJqUA7SUPSgugHWsBZ8U"
 }

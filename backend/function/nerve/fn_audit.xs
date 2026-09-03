@@ -39,4 +39,5 @@ function "Nerve/fn_audit" {
 
   response = null
   tags = ["nerve"]
+  guid = "zx1Bxm6nlT5HpcdOt3CQIk1Ykns"
 }

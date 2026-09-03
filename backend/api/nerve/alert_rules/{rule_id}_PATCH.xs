@@ -392,4 +392,5 @@ query "alert-rules/{rule_id}" verb=PATCH {
 
   response = $updated
   tags = ["nerve"]
+  guid = "A5SXJYWv10HmHRBhp2KCnXXybhw"
 }

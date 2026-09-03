@@ -182,4 +182,5 @@ function "Nerve/fn_compute_health" {
 
   response = {health_score: $score, status: $status}
   tags = ["nerve"]
+  guid = "I0Q7FFRV3gsgs7k6zaT2wJI0iKk"
 }

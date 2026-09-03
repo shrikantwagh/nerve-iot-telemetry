@@ -100,4 +100,5 @@ query "signup" verb=POST {
 
   response = {authToken: $authToken, user: $user}
   tags = ["nerve"]
+  guid = "tpN4HfmsynqQPmz6WfGqrFSTKS8"
 }

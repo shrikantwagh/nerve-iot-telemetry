@@ -177,4 +177,5 @@ query "devices" verb=POST {
     device_type: $device_type
   }
   tags = ["nerve"]
+  guid = "WNs5Fhe1I8Ywg1crWA8_6LIS-nc"
 }

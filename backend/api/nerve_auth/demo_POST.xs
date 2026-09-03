@@ -92,4 +92,5 @@ query "demo" verb=POST {
 
   response = {authToken: $authToken, user: $user}
   tags = ["nerve"]
+  guid = "qE3H3gi16Gp2gTr2vqERptntc6E"
 }

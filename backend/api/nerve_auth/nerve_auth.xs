@@ -6,4 +6,5 @@ api_group NerveAuth {
   // Signup, login and demo all carry a password or a freshly minted token. `history` at group level caps how many statements each request records for debugging, so zero keeps credential-bearing stack traces out of the instance database. Request-body archival itself is a separate workspace-level setting the UI owns.
   history = 0
   tags = ["nerve"]
+  guid = "iiy_EF0FgXf3lJoiEE75ntaKd30"
 }

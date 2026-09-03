@@ -242,4 +242,5 @@ query "fleet/health-distribution" verb=GET {
     by_category  : $by_category
   }
   tags = ["nerve"]
+  guid = "XIS1xdFwUbCcKPaFgYOArtnbNB4"
 }

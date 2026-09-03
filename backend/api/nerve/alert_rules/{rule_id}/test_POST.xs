@@ -475,4 +475,5 @@ query "alert-rules/{rule_id}/test" verb=POST {
     caveat                  : "Dry run: nothing was written. Anomaly replay scores history against the CURRENT baseline rather than the baseline as it stood at each sample, and bucketed sources are evaluated on bucket min/max, so counts are indicative rather than exact."
   }
   tags = ["nerve"]
+  guid = "nTQL9b1t1aJedPMNXyRuYGZn0_o"
 }

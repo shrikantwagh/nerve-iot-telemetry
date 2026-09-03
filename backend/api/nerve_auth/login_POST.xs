@@ -73,4 +73,5 @@ query "login" verb=POST {
 
   response = {authToken: $authToken, user: $user_public}
   tags = ["nerve"]
+  guid = "c0A1slilebobg59Tsnw3X8bOuNs"
 }

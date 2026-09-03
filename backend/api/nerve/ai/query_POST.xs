@@ -1303,4 +1303,5 @@ query "ai/query" verb=POST {
     query_log_id         : $log.id
   }
   tags = ["nerve"]
+  guid = "P6GHjYENPcd-kLnuT5fIZE68S4U"
 }

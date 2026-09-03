@@ -173,4 +173,5 @@ query "alert-rules" verb=GET {
     rules_that_have_fired: $rules_that_have_fired
   }
   tags = ["nerve"]
+  guid = "-uDVDxGKWBAB35O3sov7LXOdJ90"
 }

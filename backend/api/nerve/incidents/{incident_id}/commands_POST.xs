@@ -216,4 +216,5 @@ query "incidents/{incident_id}/commands" verb=POST {
     commands          : $created
   }
   tags = ["nerve"]
+  guid = "efAalg9RoTAmcn3S7F5XmANUvS4"
 }

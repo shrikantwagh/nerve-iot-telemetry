@@ -216,4 +216,5 @@ query "devices/{device_id}" verb=PATCH {
     status_changed: $status_changed
   }
   tags = ["nerve"]
+  guid = "Zs3LYkzSIFhx0G5mhX_xZc9-oiE"
 }

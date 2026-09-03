@@ -126,4 +126,5 @@ query "incidents" verb=GET {
     default_view: $exclude_state == "resolved"
   }
   tags = ["nerve"]
+  guid = "Uu0LBF5HK3qpKp70gD7St_v5qHs"
 }

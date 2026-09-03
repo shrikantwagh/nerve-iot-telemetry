@@ -3,4 +3,5 @@ api_group Nerve {
   description = "Authenticated (user JWT) read/write surface for the Nerve dashboard: fleet rollups, devices, sites, device types, alerts, incidents, commands and the AI endpoints."
   canonical = "nerve"
   tags = ["nerve"]
+  guid = "PMNplCixLOcaN-Rpm3WrphsUqQA"
 }

@@ -165,4 +165,5 @@ function "Nerve/fn_resolve_device" {
 
   response = {device: $device, created: $created, error: $fail_reason}
   tags = ["nerve"]
+  guid = "Czb_K0eUYMuHz98FimS0CgNnqTQ"
 }

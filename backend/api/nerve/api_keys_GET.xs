@@ -63,4 +63,5 @@ query "api-keys" verb=GET {
 
   response = {items: $items, count: ($items|count)}
   tags = ["nerve"]
+  guid = "-BnWZR5hHp_jIDitxXKj6Ns3FSk"
 }

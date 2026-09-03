@@ -84,4 +84,5 @@ query "alerts/{alert_id}/ack" verb=POST {
 
   response = {alert: $acked, acked_by_name: $user.name}
   tags = ["nerve"]
+  guid = "1azRl5PCe1x0jIiuVz35I3YmIvw"
 }

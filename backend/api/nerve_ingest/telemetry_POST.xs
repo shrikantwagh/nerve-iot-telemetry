@@ -20,6 +20,15 @@ query "telemetry" verb=POST {
   }
 
   stack {
+    // AUTHENTICATE FIRST. Deliberately ahead of the input preconditions below: an
+    // unauthenticated caller must not be able to probe input validation, and a
+    // 401 must not be distinguishable by which field it complained about.
+    // (This was a pre-middleware until Xano refused it on the Free plan - see
+    // function/nerve/fn_api_key_auth.xs for why enforcement lives here now.)
+    function.run "Nerve/fn_api_key_auth" {
+      input = {api_key: $input.api_key}
+    } as $device_auth
+
     // Without one of the two identifiers there is nothing to attach the reading to.
     precondition (($input.device_id != null) || (($input.device_serial|strlen) > 0)) {
       error_type = "inputerror"
@@ -232,4 +241,5 @@ query "telemetry" verb=POST {
 
   response = {ok: true, device_id: $device.id, alerts_fired: $rules.alerts_fired, z_flags: $z_scores}
   tags = ["nerve"]
+  guid = "c_MotWw3KN03gH3YMyLwJaozbg0"
 }

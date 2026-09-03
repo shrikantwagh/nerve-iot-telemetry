@@ -111,4 +111,5 @@ query "api-keys" verb=POST {
     warning: "Copy this key now. It is shown exactly once and is stored only as a hash - it cannot be recovered or resent. If you lose it, disable this key and create another."
   }
   tags = ["nerve"]
+  guid = "TCjBF-GubKcNOOEn78lvDq4zJLA"
 }

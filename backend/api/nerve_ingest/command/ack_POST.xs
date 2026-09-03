@@ -20,6 +20,15 @@ query "command/ack" verb=POST {
   }
 
   stack {
+    // AUTHENTICATE FIRST. Deliberately ahead of the input preconditions below: an
+    // unauthenticated caller must not be able to probe input validation, and a
+    // 401 must not be distinguishable by which field it complained about.
+    // (This was a pre-middleware until Xano refused it on the Free plan - see
+    // function/nerve/fn_api_key_auth.xs for why enforcement lives here now.)
+    function.run "Nerve/fn_api_key_auth" {
+      input = {api_key: $input.api_key}
+    } as $device_auth
+
     // Fetched rather than blind-patched, because the response has to tell the device which device the command belonged to and the guards below need the current state.
     db.get device_command {
       field_name = "id"
@@ -105,4 +114,5 @@ query "command/ack" verb=POST {
 
   response = {ok: true, command_id: $updated.id, device_id: $command.device_id, state: $updated.state}
   tags = ["nerve"]
+  guid = "goz0903ypONFbTVjyVD2TVPyqIY"
 }

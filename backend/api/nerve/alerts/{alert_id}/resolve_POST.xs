@@ -128,4 +128,5 @@ query "alerts/{alert_id}/resolve" verb=POST {
     incident_resolved: $incident_resolved
   }
   tags = ["nerve"]
+  guid = "gvGWm035zOR-8VX1PMG0hXQIZNA"
 }
