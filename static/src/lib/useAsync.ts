@@ -118,9 +118,23 @@ export function useAction<TArgs extends unknown[], TResult>(
 } {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  /**
+   * Mounted flag, set on EVERY effect run rather than only at declaration.
+   *
+   * StrictMode double-invokes effects (mount -> cleanup -> mount). With the flag
+   * initialised once at `useRef(true)` and only ever cleared in the cleanup, that
+   * sequence leaves it permanently `false` on the second mount — and every error this
+   * hook catches is then silently discarded. That is precisely how a failed login
+   * showed a spinner, stopped, and told the user nothing. Assigning `true` on each run
+   * makes the flag mean "currently mounted", which is what the guard is for.
+   */
   const mounted = useRef(true)
-  useEffect(() => () => {
-    mounted.current = false
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
   }, [])
 
   const run = useCallback(

@@ -204,8 +204,8 @@ query "alert-rules/{rule_id}" verb=PATCH {
         }
       } break
 
-      // This arm is the enum enforcement for PATCH, since `text condition?` cannot do it at the input layer.
       default {
+        // This arm is the enum enforcement for PATCH, since a `text condition?` input cannot do it at the input layer.
         throw {
           name = "inputerror"
           value = "condition must be one of gt, lt, outside_range, rate_of_change, flatline, offline, anomaly."

@@ -101,7 +101,6 @@ query "alerts/bulk-ack" verb=POST {
         user_id    : $auth.id
         action     : "alert.bulk_ack"
         entity_type: "alert"
-        entity_id  : null
         detail     : {
           requested : ($input.alert_ids|count)
           changed   : $changed

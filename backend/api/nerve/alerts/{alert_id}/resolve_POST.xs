@@ -107,15 +107,15 @@ query "alerts/{alert_id}/resolve" verb=POST {
         entity_type: "alert"
         entity_id  : $alert.id
         detail     : {
-          device_id         : $alert.device_id
-          incident_id       : $alert.incident_id
-          metric_key        : $alert.metric_key
-          severity          : $alert.severity
-          previous_state    : $alert.state
-          note              : $input.note
-          device_health      : $health.health_score
-          device_status     : $health.status
-          incident_resolved : $incident_resolved
+          device_id        : $alert.device_id
+          incident_id      : $alert.incident_id
+          metric_key       : $alert.metric_key
+          severity         : $alert.severity
+          previous_state   : $alert.state
+          note             : $input.note
+          device_health    : $health.health_score
+          device_status    : $health.status
+          incident_resolved: $incident_resolved
         }
         source     : "ui"
       }
