@@ -1,0 +1,33 @@
+[
+ {
+  "segment": 1,
+  "text": "Most tools show a red graph, then stop. This is Nerve, fleet telemetry monitoring."
+ },
+ {
+  "segment": 2,
+  "text": "Thirty-seven simulated devices. The backend is all XanoScript.",
+  "speak": "Thirty-seven simulated devices. The backend is all Zayno Script."
+ },
+ {
+  "segment": 3,
+  "text": "Three machines trip one rule. Three pages at three in the morning. Nerve sends one page."
+ },
+ {
+  "segment": 4,
+  "text": "Three Osaka mills, one shared cause. Mill two hit four point five sigma above its learned baseline. Evidence, runbook and fix command, on one screen. Labeled deterministic, because no model wrote it.",
+  "speak": "Three Osaka mills, one shared cause. Mill two hit four point five sigma above its learned baseline. Evidence, run book and fix command, on one screen. Labeled deterministic, because no model wrote it."
+ },
+ {
+  "segment": 5,
+  "text": "Now a gateway's own telemetry, per metric, inside its nominal band. Every reading updates that baseline incrementally, in constant time."
+ },
+ {
+  "segment": 6,
+  "text": "Ask in plain English. The model returns a query plan, never an answer. Xano checks it against an allow list, then runs it. No invented numbers.",
+  "speak": "Ask in plain English. The model returns a query plan, never an answer. Zayno checks it against an allow list, then runs it. No invented numbers."
+ },
+ {
+  "segment": 7,
+  "text": "Same for rules. Nerve reads each rule back."
+ }
+]

@@ -20,6 +20,15 @@
     "sim": "node simulator/index.js",
     "sim:backfill": "node simulator/index.js --backfill 24",
     "sim:scenarios": "node simulator/index.js --list-scenarios",
-    "deploy:web": "node scripts/deploy-web.mjs"
+    "deploy:web": "node scripts/deploy-web.mjs",
+    "media:frames": "node scripts/capture-frames.mjs",
+    "media:gif": "python scripts/build-demo-gif.py",
+    "media:record": "node scripts/record-demo.mjs",
+    "media:trim": "node scripts/trim-demo.mjs",
+    "media:narrate": "node scripts/narrate-demo.mjs --rate 1"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "puppeteer": "^25.9.0"
   }
 }
