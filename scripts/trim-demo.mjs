@@ -13,23 +13,29 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import ffmpegPath from 'ffmpeg-static';
 
-const V = path.resolve('video');
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(HERE, '..');
+const V = path.join(os.tmpdir(), 'nerve-demo-segments');
 const TMP = path.join(V, 'trim');
 fs.rmSync(TMP, { recursive: true, force: true });
 fs.mkdirSync(TMP, { recursive: true });
 
 // [file, keep-seconds] or [file, [inA,outA], [inB,outB]] for a two-piece cut.
 const PLAN = [
-  ['01-overview.webm', 6.5],
-  ['02-fleet.webm', 5.5],
-  ['03-incidents.webm', 7.6],
-  ['04-incident-detail.webm', 14.6], // the pitch — trimmed least
-  ['05-device-detail.webm', 10.0],
-  ['06-ask.webm', [0, 4.0], [7.0, 15.6]], // seam inside the answer wait
-  ['07-rules.webm', 4.6],
+  ['01-overview.webm', 11.5],
+  ['02-fleet.webm', 8.8],
+  ['03-incidents.webm', 12.0],
+  ['04-incident-detail.webm', 23.5],
+  ['05-alerts.webm', 10.2],
+  ['06-device-detail.webm', 17.5],
+  ['07-ask.webm', 18.5],
+  ['08-rules.webm', 12.4],
+  ['09-admin.webm', 9.6],
 ];
 
 const ENC = ['-c:v','libx264','-preset','slow','-crf','20','-pix_fmt','yuv420p','-r','30','-vf','scale=1440:900:flags=lanczos','-an'];
@@ -58,7 +64,7 @@ for (const [file, ...spec] of PLAN) {
 const list = path.join(TMP, 'concat.txt');
 fs.writeFileSync(list, pieces.map((p) => `file '${p.split(String.fromCharCode(92)).join('/')}'`).join('\n'));
 
-const mp4 = path.join(V, 'nerve-demo.mp4');
+const mp4 = path.join(ROOT, 'media', 'nerve-demo.mp4');
 run(['-f','concat','-safe','0','-i',list,'-c','copy','-movflags','+faststart', mp4]);
 
 let dur = '?';

@@ -11,8 +11,11 @@ hosted on Xano static hosting.
 
 ![Nerve demo reel](media/nerve-demo.gif)
 
-**Full recording:** [`media/nerve-demo.mp4`](media/nerve-demo.mp4) — 1:06, a real screen
-capture of the app driven against the live backend.
+**Full recording:** [`media/nerve-demo-narrated.mp4`](media/nerve-demo-narrated.mp4) —
+2:04 with spoken narration, or [`media/nerve-demo.mp4`](media/nerve-demo.mp4) for the same
+cut without audio. A real screen capture of the app driven against the live backend,
+covering the fleet, the incident queue, one correlated incident end to end, the raw alert
+layer, a device's own telemetry, the Ask console, rules and admin.
 
 *Every number in these frames is real data that came through the real ingest pipeline —
 captured from the running app against a live Xano backend, not mocked. Regenerate with

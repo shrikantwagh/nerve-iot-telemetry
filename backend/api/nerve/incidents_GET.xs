@@ -65,10 +65,25 @@ query "incidents" verb=GET {
 
     foreach ($page.items) {
       each as $incident {
+        // Incidents correlated by an older build stored site_id = 0 even though their
+        // correlation key names the site, so fall back to the key. It is keyed
+        // "site:<id>|type:<id>|metric:<key>", and the stored column wins when it is set.
+        var $site_id_effective {
+          value = $incident.site_id
+        }
+
+        conditional {
+          if (($incident.site_id == null) || ($incident.site_id == 0)) {
+            var.update $site_id_effective {
+              value = (((($incident.correlation_key|first_notempty:"")|split:"|")|first)|split:":")|last
+            }
+          }
+        }
+
         // The list is read by a human, so it carries the site's name, not its id.
         db.get site {
           field_name = "id"
-          field_value = $incident.site_id
+          field_value = $site_id_effective|to_int
           output = ["id", "name", "code"]
         } as $site
 
@@ -96,7 +111,7 @@ query "incidents" verb=GET {
             title             : $incident.title
             severity          : $incident.severity
             state             : $incident.state
-            site_id           : $incident.site_id
+            site_id           : $site_id_effective|to_int
             site_name         : $site.name
             device_count      : $incident.device_count
             alert_count       : $incident.alert_count

@@ -1,33 +1,40 @@
 [
  {
   "segment": 1,
-  "text": "Most tools show a red graph, then stop. This is Nerve, fleet telemetry monitoring."
+  "text": "This is Nerve. It watches a simulated device fleet. Most monitors show a red graph and stop. You build the theory yourself."
  },
  {
   "segment": 2,
-  "text": "Thirty-seven simulated devices. The backend is all XanoScript.",
-  "speak": "Thirty-seven simulated devices. The backend is all Zayno Script."
+  "text": "Every tool in this category does this part. Filter, sort, stare. The staring is where your shift goes."
  },
  {
   "segment": 3,
-  "text": "Three machines trip one rule. Three pages at three in the morning. Nerve sends one page."
+  "text": "Nerve groups the alerts first. Fifteen of them shared a site or a metric. They collapsed into five readable incidents, each naming its own site and why it grouped."
  },
  {
   "segment": 4,
-  "text": "Three Osaka mills, one shared cause. Mill two hit four point five sigma above its learned baseline. Evidence, runbook and fix command, on one screen. Labeled deterministic, because no model wrote it.",
-  "speak": "Three Osaka mills, one shared cause. Mill two hit four point five sigma above its learned baseline. Evidence, run book and fix command, on one screen. Labeled deterministic, because no model wrote it."
+  "text": "Here is the theory. Three mills at Osaka, all past four sigma on vibration. One shared cause beats three separate faults. The hypothesis carries its own evidence, a runbook, and one command that goes to every affected machine, audit logged. Confidence is printed. The badge says deterministic, because no model wrote this one."
  },
  {
   "segment": 5,
-  "text": "Now a gateway's own telemetry, per metric, inside its nominal band. Every reading updates that baseline incrementally, in constant time."
+  "text": "This is the layer underneath. Every alert carries its own device baseline, so the threshold was learned, not typed in."
  },
  {
   "segment": 6,
-  "text": "Ask in plain English. The model returns a query plan, never an answer. Xano checks it against an allow list, then runs it. No invented numbers.",
-  "speak": "Ask in plain English. The model returns a query plan, never an answer. Zayno checks it against an allow list, then runs it. No invented numbers."
+  "text": "Now the machine itself. Every metric from raw readings, against the operating range its type declares. Counters, state and open alerts sit beside the charts. This is where you confirm a theory, not where you form one."
  },
  {
   "segment": 7,
-  "text": "Same for rules. Nerve reads each rule back."
+  "text": "Ask in plain English. The answer never comes from a model. A plan does. Xano validates every field against an allowlist, then runs it. Today the model was unreachable, so the fallback wrote the plan. Every question is logged with its plan and its latency.",
+  "speak": "Ask in plain English. The answer never comes from a model. A plan does. Zayno validates every field against an allow list, then runs it. Today the model was unreachable, so the fallback wrote the plan. Every question is logged with its plan and its latency."
+ },
+ {
+  "segment": 8,
+  "text": "Rules are written as sentences. Critical if this machine vibrates three sigma above its own baseline. The table reads each rule back the same way, with its fire count beside it."
+ },
+ {
+  "segment": 9,
+  "text": "Keys, schemas, an audit log. The whole backend is XanoScript. And the graph was never the hard part.",
+  "speak": "Keys, schemas, an audit log. The whole backend is Zayno Script. And the graph was never the hard part."
  }
 ]

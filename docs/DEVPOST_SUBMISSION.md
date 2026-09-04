@@ -294,17 +294,21 @@ Devpost wants a 3:2 ratio, ≤5 MB, up to 15 images. Suggested order:
 
 | File | Shows |
 |---|---|
-| `media/nerve-demo.gif` | 8-frame reel, 0.78 MB, 22.8s loop — under the 5 MB cap |
+| `media/nerve-demo.gif` | 10-frame reel, 1.32 MB, 30.4s loop — under the 5 MB cap |
 | `media/02-overview.png` | Fleet overview with live totals |
 | `media/03-fleet.png` | Device grid, filters, live signals |
-| `media/04-device-detail.png` | Real telemetry charts with nominal bands |
-| `media/05-rules.png` | Rules list and the natural-language composer |
-| `media/06-admin.png` | API keys, device types, AI activity |
-| `media/08-ask-answered.png` | Ask console with the answer and the validated plan |
+| `media/04-incidents.png` | Incident queue — alerts correlated into clusters |
+| `media/05-incident-detail.png` | Root cause, confidence, evidence, remediation runbook |
+| `media/06-device-detail.png` | Real telemetry charts with nominal bands |
+| `media/07-rules.png` | Rules list and the natural-language composer |
+| `media/08-admin.png` | API keys, device types, AI activity |
+| `media/10-ask-answered.png` | Ask console with the answer and the validated plan |
 
-**Still missing, and it is the most important one:** an incident-detail frame showing AI
-root cause, confidence, evidence and remediation. That needs the Anthropic key set and a
-fault correlated into an incident first — see `docs/DEMO_SCRIPT.md` § *Before you record*.
+`05-incident-detail.png` is the one to lead with: it is the frame that separates this from
+a dashboard. Note that its analysis is labelled **Deterministic** — the account has no
+Anthropic credits, so the hypothesis was computed from the correlated alerts rather than
+written by a model, and the product says so on screen rather than hiding it.
+
 Regenerate everything with:
 
 ```bash
@@ -315,8 +319,13 @@ node scripts/capture-frames.mjs && python scripts/build-demo-gif.py
 
 ## Field: Video demo link
 
-`media/nerve-demo.mp4` — 1:06, 1440x900, H.264, 3.9 MB. A real screen recording of the
-running app against the live Xano backend (no narration, no audio).
+`media/nerve-demo-narrated.mp4` — **2:04**, 1440x900, H.264 + AAC, 9.5 MB. A real screen
+recording of the running app against the live Xano backend, with spoken narration.
+`media/nerve-demo.mp4` is the identical cut without audio (7.7 MB), which is the better
+source for a silent looping embed.
+
+This satisfies the submission's 2–4 minute requirement directly, so `docs/DEMO_SCRIPT.md`
+is now a presenter's script rather than the only long-form artifact.
 
 **Devpost needs a URL, not a file**, so this has to go up to YouTube/Vimeo first:
 
@@ -327,18 +336,36 @@ running app against the live Xano backend (no narration, no audio).
 
 Regenerate with `node scripts/record-demo.mjs`.
 
-**What this recording does NOT show**, and why: incident correlation and real Claude
-analysis. Both need `ANTHROPIC_API_KEY` set and a fault correlated into an incident. Until
-then the video shows a working monitoring app rather than the argument the project makes.
-Re-record after the pre-flight in `docs/DEMO_SCRIPT.md` and it will.
+**What this recording shows, precisely.** Incident correlation is in it: fifteen alerts
+collapsed into five incidents, and one of them opened end to end with its hypothesis,
+evidence, remediation runbook and the command that goes to all three affected machines.
+
+**What it does not show** is a model writing that analysis. The account has no Anthropic
+credits, so the hypothesis came from the deterministic analyzer and both the screen and
+the narration say so. The integration itself is verified working — the API call
+authenticates and returns `invalid_request_error: credit balance is too low`, not an auth
+failure — so purchasing credits turns the same screens into model-written analysis with no
+code change. Segment seven makes the same point about the Ask console: the plan on screen
+was written by the keyword fallback, and the architectural claim (a plan is validated
+against a field allowlist before Xano executes it) holds either way.
+
+One honest note on the device-detail segment: the chart window is about three hours, so
+the 6.2 mm/s excursion that opened the incident has aged out of it. The charts show each
+metric against its declared operating range, with the two alerts still open below.
 
 ### Superseded note
 
 
-Not yet recorded. `docs/DEMO_60S.md` has a second-by-second 60-second cut;
-`docs/DEMO_SCRIPT.md` has the 2–4 minute version the submission rules ask for, with a
-pre-flight checklist.
+Recorded. `media/nerve-demo-narrated.mp4` is 2:04 and covers nine screens, which meets
+the 2–4 minute requirement. `docs/DEMO_60S.md` and `docs/DEMO_SCRIPT.md` remain as
+presenter scripts for a live walkthrough.
 
-**Do not record before:** the instance is on Essential, `ANTHROPIC_API_KEY` is set, 24h is
-backfilled, and a fault has been injected and correlated into an incident with AI analysis.
-Without those, the two headline features are absent and the video undersells the project.
+Reproduce the whole chain with:
+
+```bash
+node simulator/index.js --backfill 3 --backfill-step 60 --scenario spindle-bearing-wear --site OSA-01
+npm run media:record && npm run media:trim && npm run media:narrate
+```
+
+The backfill matters: without recent readings the device-detail charts render "No readings
+in this window", which is how the first attempt at this cut was wasted.
